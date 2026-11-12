@@ -40,7 +40,10 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
   `z` 2.0 normal; 1.6-1.8 = a step closer to camera (slightly blurred - use for a looming reaction).
 - `pose`: a name from the pose library or a dict of bone angles/face values.
   `keys`: pose changes at absolute times; `dur` is the blend time; `ease` back|out|inOut|linear.
-- `walk`: moves from mark to `to` between `s` and `e` with a paper-puppet walk; faces the direction.
+- `walk`: moves from mark to `to` between `s` and `e` (ease inOut by default). Humans use a front-on
+  puppet walk (feet lift in turn, body sways); Kupas trots side-on and turns to face the direction.
+  Steps are timed to the distance, so a longer walk in the same time = faster steps. Keep walks
+  slower than ~300 px/s so it doesn't look like running.
 - `talk`: true (whole scene) or windows [[s,e]]; mouth follows the voice loudness. Only for the
   character who is actually speaking (in-character lines), never for the narrator.
 

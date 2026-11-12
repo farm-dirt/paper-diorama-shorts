@@ -55,6 +55,7 @@ Captions are torn cream paper labels (Fraunces Black, ink colour), key word in l
 outline, one word in yellow.
 
 ## Motion
-Characters move **on twos** (12 poses/s) — the handmade stop-motion feel. Camera, waves, glows
-and clouds stay smooth at 24 fps. Snappy pose changes use the `back` ease (slight overshoot).
+Everything moves smoothly at 24 fps by default (the user found stepped "on twos" walking choppy).
+`"steps": 12` in project.json gives a stop-motion feel for poses only; walks and positions always
+stay smooth. Snappy pose changes use the `back` ease (slight overshoot).
 Every actor breathes, drifts and blinks automatically; never leave a face unchanged > 2.5 s.

@@ -18,7 +18,8 @@ import sets as SETS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FONT = os.path.join(ROOT, 'assets', 'Fraunces-Black.woff')
-STEP = 12.0  # pose updates per second ("on twos" at 24 fps)
+STEP = 24.0  # pose updates per second; project "steps": 12 gives a choppier stop-motion feel (never for walks)
+LEG = {'ilaw': 205, 'mang_oso': 290, 'kupas': 105}
 
 # ------------------------------------------------------------ pose library
 HUMAN = {  # Ilaw + Mang Oso (bones: root torso head armR armL); arms: armR + = outward, armL - = outward
@@ -44,6 +45,7 @@ DOG = {
     'scared': {'head': 10, 'tail': -40, 'eyes': 1.5, 'bob': 10}, 'happy': {'tail': 40, 'mouth': 0.6, 'head': -6},
 }
 POSES = {'ilaw': HUMAN, 'mang_oso': HUMAN, 'kupas': DOG}
+DEFAULT_SCALE = {'ilaw': 0.86, 'mang_oso': 0.82, 'kupas': 0.72}
 NUMERIC_DEFAULTS = {'blink': 0.0, 'mouth': 0.0, 'look': 0.0, 'eyes': 1.0, 'brow': 0.0, 'bob': 0.0}
 
 
@@ -148,7 +150,7 @@ class Director:
             pose['tail'] = pose.get('tail', 0) + 14 * math.sin(2 * math.pi * ta * 1.6)
         # blink every ~3.4 s (+ per-character offset), 2 steps long
         ph = (ta + seed % 5) % 3.4
-        if self.life and ph < 2 / STEP and pose.get('blink', 0) < 0.5:
+        if self.life and ph < 0.13 and pose.get('blink', 0) < 0.5:
             pose['blink'] = 1.0
         # talking: mouth follows the voice loudness during this actor's talk windows
         talk = a.get('talk')
@@ -156,35 +158,59 @@ class Director:
             wins = [[sc['start'], sc['end']]] if talk is True else talk
             if any(w0 <= ta < w1 for w0, w1 in wins):
                 pose['mouth'] = max(pose.get('mouth', 0), min(1.0, self.env(ta) * 1.1))
-        # walking
+        # walking (always smooth, steps timed to the distance covered so feet don't skate)
         wk = a.get('walk')
-        if wk and wk['s'] <= ta < wk['e']:
-            ph = (ta - wk['s']) * 2 * math.pi * wk.get('rate', 1.8)
-            sw = math.sin(ph)
-            if who == 'kupas':
-                for b_, sgn in (('legFL', 1), ('legBR', 1), ('legFR', -1), ('legBL', -1)):
-                    pose[b_] = 24 * sw * sgn
-            else:
-                pose['legL'] = 20 * sw
-                pose['legR'] = -20 * sw
-                pose['armR'] = pose.get('armR', rig.bones['armR'].get('rest', 0)) - 14 * sw
-                pose['armL'] = pose.get('armL', rig.bones['armL'].get('rest', 0)) - 14 * sw
-            pose['bob'] = pose.get('bob', 0) - 7 * abs(math.sin(ph))
+        if wk:
+            dist, moving = self.walk_dist(a, t)
+            if moving:
+                scale = a.get('scale', DEFAULT_SCALE.get(who, 0.8))
+                if who == 'kupas':
+                    stride = 2 * LEG[who] * scale * math.sin(math.radians(24)) * 1.4
+                    ph = math.pi * dist / max(1.0, stride)
+                    sw = math.sin(ph)
+                    for b_, sgn in (('legFL', 1), ('legBR', 1), ('legFR', -1), ('legBL', -1)):
+                        pose[b_] = 24 * sw * sgn
+                    pose['bob'] = pose.get('bob', 0) - 4 * abs(math.sin(ph))
+                    pose['head'] = pose.get('head', 0) + 3 * math.sin(2 * ph)
+                else:
+                    stride = 0.55 * LEG[who] * scale  # one step (front-on puppet walk)
+                    ph = math.pi * dist / max(1.0, stride)
+                    sw = math.sin(ph)
+                    lift = 0.07 * LEG[who]
+                    pose['legL_dy'] = -lift * max(0.0, sw)
+                    pose['legR_dy'] = -lift * max(0.0, -sw)
+                    pose['legL'] = pose.get('legL', 0) + 5 * max(0.0, sw)
+                    pose['legR'] = pose.get('legR', 0) - 5 * max(0.0, -sw)
+                    pose['armR'] = pose.get('armR', rig.bones['armR'].get('rest', 0)) + 9 * sw
+                    pose['armL'] = pose.get('armL', rig.bones['armL'].get('rest', 0)) + 9 * sw
+                    pose['torso'] = pose.get('torso', 0) + 2.5 * sw
+                    pose['head'] = pose.get('head', rig.bones['head'].get('rest', 0)) - 1.5 * sw
+                    pose['bob'] = pose.get('bob', 0) - 0.03 * LEG[who] * abs(sw)
         return pose
 
-    def actor_x(self, a, set_, ta):
+    def walk_x(self, a, t):
+        set_ = self._set
         def xof(v):
             return set_['marks'][v] if isinstance(v, str) else v
-        x = xof(a.get('mark', a.get('x', 'C')))
+        x0 = xof(a.get('mark', a.get('x', 'C')))
         wk = a.get('walk')
+        if not wk:
+            return x0, x0, x0
+        x1 = xof(wk['to'])
+        u = ease((t - wk['s']) / max(0.01, wk['e'] - wk['s']), wk.get('ease', 'inOut'))
+        return x0, x1, lerp(x0, x1, u) if t >= wk['s'] else x0
+
+    def walk_dist(self, a, t):
+        wk = a['walk']
+        x0, x1, x = self.walk_x(a, t)
+        return abs(x - x0), wk['s'] <= t < wk['e']
+
+    def actor_x(self, a, set_, t):
+        x0, x1, x = self.walk_x(a, t)
         face = a.get('face', 1)
-        if wk:
-            x1 = xof(wk['to'])
-            u = ease((ta - wk['s']) / max(0.01, wk['e'] - wk['s']), wk.get('ease', 'linear'))
-            if ta >= wk['s']:
-                x = lerp(x, x1, u)
-            if wk['s'] <= ta < wk['e'] and 'face' not in a:
-                face = 1 if x1 >= xof(a.get('mark', a.get('x', 'C'))) else -1
+        wk = a.get('walk')
+        if wk and wk['s'] <= t < wk['e'] and 'face' not in a and a['who'] == 'kupas':
+            face = 1 if x1 >= x0 else -1
         return x, face
 
     # -------------------------------------------------------- frame
@@ -195,17 +221,19 @@ class Director:
         for it in set_['items']:
             dx, dy = it['move'](t) if it['move'] else (0, 0)
             S.add(it['layer'], it['z'], it['lift'], it['x'], it['y'], dx, dy, key=it['key'])
-        ta = math.floor(t * STEP) / STEP
+        step = float(self.proj.get('steps', STEP))
+        ta = math.floor(t * step + 1e-6) / step
+        self._set = set_
         glows = list(set_['glows'](t))
         locs = {}
         for a in sc.get('actors', []):
             rig = self.rigs[a['who']]
             pose = self.actor_pose(a, t, sc, ta)
-            x, face = self.actor_x(a, set_, ta)
+            x, face = self.actor_x(a, set_, t)
             if pose.pop('face_flip', False):
                 face = -face
             pose['face'] = face
-            scale = a.get('scale', {'ilaw': 0.86, 'mang_oso': 0.82, 'kupas': 0.72}.get(a['who'], 0.8))
+            scale = a.get('scale', DEFAULT_SCALE.get(a['who'], 0.8))
             L, fx, fy = rig.render(pose=pose, scale=scale, seed=31 + len(a['who']))
             fy_ = a.get('y', set_['floor'])
             ox, oy = x - fx, fy_ - fy

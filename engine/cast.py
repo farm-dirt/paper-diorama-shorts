@@ -73,7 +73,7 @@ class Rig:
             if b['parent'] is None:
                 M = _M(x, y + pose.get('bob', 0) * scale, 0, scale, face) @ _M(*b['off'], ang)
             else:
-                M = W(b['parent']) @ _M(*b['off'], ang)
+                M = W(b['parent']) @ _M(b['off'][0] + pose.get(name + '_dx', 0), b['off'][1] + pose.get(name + '_dy', 0), ang)
             if b.get('hang'):  # keep the bone hanging straight down (lanterns)
                 M = _M(M[0, 2], M[1, 2], pose.get(name, 0.0), scale, face)
             world[name] = M
