@@ -10,8 +10,8 @@ Separate from, and shares no art with, `pastel-toon-shorts`. The general tools `
 `audio.py`, `new_project.py` and `qa.py` started as copies from that engine and were adapted.
 
 ```
-engine/     paperkit.py (paper renderer), cast.py (characters), sets.py (locations), director.py (project -> frames)
-tools/      new_project, timing, audio, lint, stills (+ thumbnails), render, qa, model_sheet
+engine/     preview.html (preview page), paperkit.py (paper renderer), cast.py (characters), sets.py (locations), director.py (project -> frames)
+tools/      new_project, timing, audio, lint, stills (+ thumbnails), render, build_preview (web page), qa, model_sheet
 reference/  style-guide, animation-guide (project.json schema), characters, production-guide, content-playbook
 assets/     Fraunces Black font (SIL Open Font License, see Fraunces-OFL.txt)
 examples/   test5/project.json - a 5-second two-scene example

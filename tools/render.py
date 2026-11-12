@@ -27,7 +27,7 @@ def work(args):
     from director import Director
     D = Director(pdir)
     w, h = int(math.ceil(1080 * k)), int(math.ceil(1920 * k))
-    enc = ['-c:v', 'libx264', '-preset', 'veryfast' if preview else 'medium', '-crf', '22' if preview else '16',
+    enc = ['-c:v', 'libx264', '-preset', 'veryfast' if preview else 'medium', '-crf', '28' if preview else '16',
            '-pix_fmt', 'yuv420p', '-g', str(fps)]
     ff = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{w}x{h}',
                            '-r', str(fps), '-i', '-', *enc, seg], stdin=subprocess.PIPE)

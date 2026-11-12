@@ -123,14 +123,26 @@ floating props, heads under captions, muddy night scenes, anything that doesn't 
 (2) Any stretch > 1.5 s where nothing changes? (3) Any shot that only illustrates the narration
 literally? (4) Same face held too long? (5) Does the end cut cleanly back into the start? Fix, re-check.
 
-### Phase 7 — Preview  ⛔ approval required
+### Phase 7 — Browser preview  ⛔ approval required
 ```bash
-python3 ~/pds/tools/render.py ~/shorts/<slug> --preview      # → preview/preview.mp4 (540x960, ~3 min)
+python3 ~/pds/tools/build_preview.py ~/shorts/<slug>   # preview/: preview.mp4 (half size, with sound) + scene thumbnails + page, ~3-4 min
 ```
-Send `preview/preview.mp4` with SendUserFile (it plays in the chat). It is made by the same
-renderer as the final, at half size. Ask the user to name changes by time or scene number
-("at 0:12 make Kupas bark"), or say "approved". Also copy the preview to their computer folder
-if one is connected.
+Copy the preview folder into the working directory (the publisher only attaches files from there),
+then publish it with the Artifact tool's publish-from-files: `index.html`, `data.js`, `preview.mp4`,
+every `thumbs/scene_NN.jpg`, `assets/Fraunces-Black.woff` (same paths). **Right after the FIRST
+publish**, read the declaration and declare `{"db": {}, "user": {}}` on it: that is what lets the
+page's buttons save. Republish the SAME artifact (slug + base_version, mode "replace") on every
+revision, so the link never changes. Also copy the preview folder to the user's computer if a
+folder is connected (opening `index.html` works offline).
+Tell the user: press ▶ (it loops like a Short), ⛶ Full screen (or double-click / F), "Play this
+scene" to loop one scene, type change requests in the boxes, then press **Send notes to Claude** or
+**✓ Approve** and just type **"check"** in the chat. A page cannot message the chat by itself, so
+never promise that the buttons process on their own.
+**When the user says "check"** (or "done", "sent"): read `feedback/latest` with db_get on the
+preview's slug and act on its `text`: kind `notes` → do the revisions; kind `approve` → Phase 8
+(with the thumbnail they named, or ask A/B in the same reply). If it is missing or older than their
+last message, the page fell back to copying: ask them to paste the text instead.
+The preview video comes from the same renderer as the final (half size): never fake it with stills.
 **Thumbnails (made at the same time, so no extra waiting):** design 2 NEW thumbnail images.
 NEVER use a frame captured from the video: each is its own composition made to sell this short
 at phone size.
@@ -142,9 +154,11 @@ at phone size.
   `stills.py <dir> --thumb thumb_A.json --title "2-5 WORDS" --hl KEYWORD --out final/thumbnail_A.png`.
 - Scale each to ~200 px wide and LOOK: the idea must read in under a second; the title (top third,
   never over a face) must make someone curious, not repeat the full title.
-Send both with the preview and ask: "Which thumbnail, A or B? (or tell me what to change)".
-Revisions: change only the scenes named → lint → re-render the preview (for a quick check of one
-scene: `render.py <dir> --from S --to E --preview --out /tmp/clip.mp4`) → resend.
+Ask together with the preview link: "Which thumbnail, A or B? (or tell me what to change)".
+Send both thumbnails with SendUserFile together with the preview link.
+Revisions: change only the scenes named → lint → build_preview → republish the same artifact. For a
+quick moving check of one scene you may also render just that range:
+`render.py <dir> --from S --to E --preview --out /tmp/clip.mp4` and send it with SendUserFile.
 
 ### Phase 8 — Final render (only after explicit approval)
 ```bash

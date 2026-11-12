@@ -5,6 +5,9 @@
   layers of cut paper. Preview and final come from the same code, so what you approve is what renders.
 - Static set pieces are built and blurred once, then reused for every frame (fast). Characters
   are redrawn 12 times a second (stop-motion feel).
+- The **browser preview** (`build_preview.py`) is a web page: the half-size render with sound, a timeline,
+  one card per scene (thumbnail, what is said, notes box, Play this scene), loop, full screen, and
+  Send notes / Approve buttons that save to the page's db at `feedback/latest`.
 - `render.py` splits the frames across the CPU cores and pipes them into **FFmpeg** (H.264).
 - `timing.py` + `audio.py` analyse the voice and synthesise music/SFX (no downloads, no copyright issues).
 - Not used: Blender/real 3D (much bigger install and learning curve), Whisper (model download blocked).
@@ -16,7 +19,7 @@ python3 ~/pds/tools/timing.py VOICE ~/shorts/<slug>/project-files/timing.json --
 python3 ~/pds/tools/lint.py ~/shorts/<slug>                       # must say OK
 python3 ~/pds/tools/audio.py ~/shorts/<slug>                      # audio/mix.wav + mix.mp3
 python3 ~/pds/tools/stills.py ~/shorts/<slug> 0.0 4.2 9.8 --out /tmp/check.jpg   # spot check
-python3 ~/pds/tools/render.py ~/shorts/<slug> --preview           # preview/preview.mp4 (540x960)
+python3 ~/pds/tools/build_preview.py ~/shorts/<slug>             # preview/ web page: preview.mp4 (540x960) + thumbs + index.html
 python3 ~/pds/tools/render.py ~/shorts/<slug> --from 4.9 --to 7.3 --preview --out /tmp/clip.mp4
 python3 ~/pds/tools/render.py ~/shorts/<slug>                     # final/<slug>.mp4
 python3 ~/pds/tools/qa.py ~/shorts/<slug> ~/shorts/<slug>/final/<slug>.mp4
