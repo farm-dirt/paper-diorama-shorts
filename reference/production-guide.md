@@ -5,7 +5,7 @@
   layers of cut paper. Preview and final come from the same code, so what you approve is what renders.
 - Static set pieces are built and blurred once, then reused for every frame (fast). Characters
   are redrawn 12 times a second (stop-motion feel).
-- The **browser preview** (`build_preview.py`) is a web page: the half-size render with sound, a timeline,
+- The **browser preview** (`build_preview.py`) is a web page: the FULL-size final render (light web copy) with sound, a timeline,
   one card per scene (thumbnail, what is said, notes box, Play this scene), loop, full screen, and
   Send notes / Approve buttons that save to the page's db at `feedback/latest`.
 - `render.py` splits the frames across the CPU cores and pipes them into **FFmpeg** (H.264).
@@ -19,7 +19,7 @@ python3 ~/pds/tools/timing.py VOICE ~/shorts/<slug>/project-files/timing.json --
 python3 ~/pds/tools/lint.py ~/shorts/<slug>                       # must say OK
 python3 ~/pds/tools/audio.py ~/shorts/<slug>                      # audio/mix.wav + mix.mp3
 python3 ~/pds/tools/stills.py ~/shorts/<slug> 0.0 4.2 9.8 --out /tmp/check.jpg   # spot check
-python3 ~/pds/tools/build_preview.py ~/shorts/<slug>             # preview/ web page: preview.mp4 (540x960) + thumbs + index.html
+python3 ~/pds/tools/build_preview.py ~/shorts/<slug>             # renders final/<slug>.mp4 (1080x1920) + preview/ page (web copy, thumbs, index.html); --half = quick blurry check
 python3 ~/pds/tools/render.py ~/shorts/<slug> --from 4.9 --to 7.3 --preview --out /tmp/clip.mp4
 python3 ~/pds/tools/render.py ~/shorts/<slug>                     # final/<slug>.mp4
 python3 ~/pds/tools/qa.py ~/shorts/<slug> ~/shorts/<slug>/final/<slug>.mp4
@@ -30,7 +30,8 @@ Needs: python3 with numpy, opencv-python (cv2), Pillow; ffmpeg. Check with
 `python3 -c "import numpy, cv2, PIL"` and `ffmpeg -version`.
 
 ## Speed (2 CPUs)
-Preview ≈ 0.15 s/frame wall (45 s short ≈ 3 min). Final ≈ 0.7 s/frame wall (45 s ≈ 12-13 min).
+Preview = final render ≈ 0.45 s/frame wall (60 s short ≈ 11 min; run it in the background and poll).
+Only re-render after preview changes; an approved preview needs no extra final render. `--half` ≈ 0.1 s/frame.
 Rack focus and many actors are the slowest shots. Render the final in the background only if the
 session will stay open; otherwise render in the foreground with a long timeout.
 

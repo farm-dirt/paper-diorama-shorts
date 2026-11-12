@@ -21,6 +21,13 @@ def main():
         print('no scenes'); sys.exit(1)
     if abs(sc[0]['start']) > 0.01: probs.append('scene 1 must start at 0.0 (frame 0 is the hook)')
     if abs(sc[-1]['end'] - dur) > 0.06: probs.append(f'last scene ends at {sc[-1]["end"]} but the voice is {dur:.2f} s')
+    cp = os.path.join(pf, 'custom.py')
+    if os.path.exists(cp):  # project characters/creatures (e.g. a new officer) must not be flagged as unknown
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('custom', cp)
+        mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+        if hasattr(mod, 'register'):
+            mod.register(CAST, {}, DR.POSES, SETS.SETS)
     rigs = {k: f() for k, f in CAST.items()}
     capY = proj.get('captionY', 420)
     for i, s in enumerate(sc, 1):

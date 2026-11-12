@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Build PROJECT_DIR/preview/ : the web page you watch and comment on before the final render.
 
-usage: python3 build_preview.py PROJECT_DIR [--skip-video]
-  1. renders preview/preview.mp4 (half size, same renderer as the final, with the audio mix)
+usage: python3 build_preview.py PROJECT_DIR [--skip-video] [--half]
+  1. renders the FINAL video at full 1080x1920 (final/<slug>.mp4) and a lighter web copy preview/preview.mp4
+     (--half = old quick half-size preview only; blurry, use for rough checks)
   2. renders one thumbnail per scene -> preview/thumbs/scene_NN.jpg
   3. writes preview/data.js (scenes + what is said in each) and preview/index.html
 Publish the folder with the Artifact tool (index.html, data.js, preview.mp4, thumbs/*, assets/*),
@@ -21,7 +22,16 @@ def main():
     os.makedirs(os.path.join(out, 'thumbs'), exist_ok=True)
     os.makedirs(os.path.join(out, 'assets'), exist_ok=True)
     if '--skip-video' not in sys.argv or not os.path.exists(os.path.join(out, 'preview.mp4')):
-        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'render.py'), P, '--preview'], check=True)
+        if '--half' in sys.argv:   # quick, blurry half-size check only
+            subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'render.py'), P, '--preview'], check=True)
+        else:                      # default: render the FINAL at full size once; approve it = already done
+            slug = json.load(open(os.path.join(P, 'project-files', 'project.json')))['slug']
+            final = os.path.join(P, 'final', f'{slug}.mp4')
+            subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'render.py'), P], check=True)
+            # web copy: same 1080x1920 picture, lighter file (the Artifact publisher caps files at 20 MB)
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', final, '-c:v', 'libx264', '-preset', 'medium', '-crf', '25',
+                            '-maxrate', '2600k', '-bufsize', '5200k', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '128k',
+                            '-movflags', '+faststart', os.path.join(out, 'preview.mp4')], check=True)
     import paperkit
     paperkit.set_res(0.25)
     from director import Director

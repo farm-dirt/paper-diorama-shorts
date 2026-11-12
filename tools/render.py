@@ -27,7 +27,7 @@ def work(args):
     from director import Director
     D = Director(pdir)
     w, h = int(math.ceil(1080 * k)), int(math.ceil(1920 * k))
-    enc = ['-c:v', 'libx264', '-preset', 'veryfast' if preview else 'medium', '-crf', '28' if preview else '16',
+    enc = ['-c:v', 'libx264', '-preset', 'veryfast' if preview else 'medium', '-crf', '28' if preview else '19',
            '-pix_fmt', 'yuv420p', '-g', str(fps)]
     ff = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{w}x{h}',
                            '-r', str(fps), '-i', '-', *enc, seg], stdin=subprocess.PIPE)
@@ -80,8 +80,8 @@ def main():
     audio = mixp if os.path.exists(mixp) else (voice if os.path.exists(voice) else None)
     if audio and '--noaudio' not in a:
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', joined, '-ss', f'{t_from:.3f}', '-t', f'{t_to - t_from:.3f}',
-                        '-i', audio, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
-                        '-ar', '48000', '-shortest', '-movflags', '+faststart', out], check=True)
+                        '-i', audio, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-af', 'apad', '-c:a', 'aac', '-b:a', '192k',
+                        '-ar', '48000', '-t', f'{(f1 - f0) / fps:.3f}', '-movflags', '+faststart', out], check=True)
     else:
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', joined, '-c', 'copy', '-movflags', '+faststart', out], check=True)
     for s in segs + [joined, lst]:

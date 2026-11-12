@@ -263,7 +263,7 @@ class Director:
         rk = sc.get('rack')
         if rk and t >= rk['t']:
             focus = lerp(focus, rk['to'], ease((t - rk['t']) / rk.get('dur', 0.5)))
-        img = S.render(focus=focus, dof=sc.get('dof', 0.85), cam=(cx, cy, cz))
+        img = S.render(focus=focus, dof=sc.get('dof', self.proj.get('dof', 0.3)), cam=(cx, cy, cz))
         fl = 0.0
         f_ = sc.get('flash')
         if f_ and f_['t'] <= t < f_['t'] + f_.get('dur', 0.2):
@@ -370,6 +370,11 @@ class Director:
                 u = (t - c['s']) / 0.12
                 dy = 16 * (1 - ease(u, 'out')) if u < 1 else 0
                 self.paste(out, self.caption_img(c['text'], 66), 540, P.get('captionY', 420) + dy)
+        for o in (P.get('overlays') or []) if hook is not None else []:  # silent tags (none on thumbnails)
+            if o['s'] <= t < o['e']:
+                u = (t - o['s']) / 0.16
+                sc_ = 0.6 + 0.4 * ease(u, 'back') if u < 1 else 1.0
+                self.paste(out, self.caption_img(o['text'], o.get('size', 72), o.get('maxw', 860)), o['x'], o['y'], sc_, rot=o.get('rot', 0))
         cta = P.get('cta')
         if cta and cta['s'] <= t < cta['e']:
             self.draw_cta(out, t, cta)

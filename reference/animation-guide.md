@@ -34,7 +34,9 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
 ```
 - `cam` = [pan_x, pan_y, zoom] in px; parallax is automatic (near layers move/zoom more).
   Keep zoom 0.95-1.4. Positive pan_x moves the view right; negative pan_y looks up.
-- `focus` default 2.0 (the actors). `rack` moves focus during the shot.
+- `focus` default 2.0 (the actors). `rack` moves focus during the shot. `dof` (depth blur) default 0.3
+  (project-wide `"dof"` or per scene); keep it low so phones see a crisp picture - raise to ~0.55 only
+  for a deliberate rack-focus shot.
 - `light` overrides the set's default time-of-day grade.
 - Actor `mark`: L, CL, C, CR, R (set-specific x) or `"x": 640`. `y` defaults to the set floor.
   `z` 2.0 normal; 1.6-1.8 = a step closer to camera (slightly blurred - use for a looming reaction).
@@ -44,6 +46,10 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
   puppet walk (feet lift in turn, body sways); Kupas trots side-on and turns to face the direction.
   Steps are timed to the distance, so a longer walk in the same time = faster steps. Keep walks
   slower than ~300 px/s so it doesn't look like running.
+- **Silent tags** (the narrator is the ONLY voice): top-level `"overlays": [{"s", "e", "text", "x", "y",
+  "size": 72, "rot": -3}]` draws torn-paper labels in screen space (`*word*` = lantern red) for
+  character lines ("MY *POTATOES!*"), labels ("USA"), counters ("*12* YEARS") or a year ticker. Keep
+  them near the speaker, below the caption band; not drawn on thumbnails.
 - `talk`: true (whole scene) or windows [[s,e]]; mouth follows the voice loudness. Only for the
   character who is actually speaking (in-character lines), never for the narrator.
 

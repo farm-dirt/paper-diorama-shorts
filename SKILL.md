@@ -33,51 +33,99 @@ Exception: if the user's message already includes a script, use it and go to Pha
 (review/tighten it, keep their voice).
 
 ### Phase 2 — Category (automatic, no question)
-Do NOT list categories or ask. The category is **Local culture & legends of the Philippines**
-(folklore, myths, creatures, traditions, local history). Say in one line
-"Category: Philippine culture & legends" and go to Phase 3. Use another category only if the
-user names one.
+Do NOT list categories or ask. The paper channel's niche is **Things People Actually Invented**:
+weird-but-true history — strange real inventions, plans, laws, wars, stunts and events people
+actually made or did (e.g. the 1859 Pig War). Philippine legends belong to the pastel channel, so
+don't pitch them here. Say in one line "Category: Things People Actually Invented" and go to
+Phase 3. Use another category only if the user names one.
 
 ### Phase 3 — 10 ideas  ⛔
 10 original ideas (avoid topics the user already made shorts about, in this or the pastel
 series), each with **title, 1-2 line description, the hook (first 2 seconds), storytelling
 potential (★1-5 + why), why it suits the paper look (which set, light, what folds/glows/moves),
-format (Creature card 20-30 s or Story 40-55 s), audience fit (teen/adult tone, not a kids' moral
-lesson)**. Flag your top 2. Facts must be true: search the web for anything factual before
-pitching it, and note when a legend has regional versions.
-**What wins in this niche (research, Nov 2026):** creature Shorts break out even on tiny channels
-when they open on one creature with one weird, instantly readable trait (manananggal, aswang,
-tiyanak, kapre, tikbalang, sigbin, batibat rank above moral-lesson alamat). Include at least 4
-creature ideas, plus a few funny/twisted legends. The paper style shines on night scenes,
-lantern light, things that unfold or tear, and reveals by rack focus. Every idea must fit the
-series name (see "Series identity"). Wait for the user to pick.
+format (Object card 20-30 s or Story 40-55 s), audience fit (teen/adult tone)**. Flag your top 2.
+Facts must be true: search the web for every idea before pitching it, check the main numbers on a
+primary or reputable source (museum, government, encyclopedia), and flag anything disputed ("accounts
+differ") instead of pitching it as fact.
+**What wins in this niche:** one absurd, instantly readable thing that can fill frame 0 (a pig vs
+warships, a spy cat, a bucket two cities fought over) + a specific number or date + a twist the
+viewer doesn't see coming. Mix the types in every list: at least 3 real inventions/devices, 3
+events/wars/plans gone wrong, and a few "the famous story is a myth" reveals. Avoid repeating the
+shape of the last short (e.g. "army loses to animals" twice in a row) and anything already made in
+the pastel series (Emu War etc.). Avoid tragedies with real deaths as comedy; give those a respectful
+tone or skip them. The paper style shines on tiny machines, maps, night scenes, lantern light,
+things that unfold or tear, and reveals by rack focus. Every idea must fit the series name. Wait
+for the user to pick.
 
 ### Phase 4 — Script + voice-over (ONE checkpoint)  ⛔
-Write the script with the template in `content-playbook.md`: hook (0-2 s), setup, escalation,
-twist/payoff, button ending. Per section: narration, est. duration (~2.6 words/s), visuals,
-character actions, transition. Target 30-55 s (≈ 80-140 words) for a Story, 20-30 s
-(≈ 50-75 words) for a Creature card.
-**Retention rules (check every script before sending):**
-- **Write the ending first**, then build backwards. One character, one goal, one problem.
-- **Hook = first spoken line + first image together**: start in the middle of the strangest
-  moment (never "Long ago in a village…", never a greeting). 2-4 word on-screen hook text for 0-2 s.
-- **Link beats with "but" / "therefore", never "and then"**.
-- **Re-hook every ~8-10 s**: a new question, reveal or reversal.
-- **Show, don't narrate**: the narrator sets up, the picture delivers the joke or scare. Mark at
-  least 2 moments where the picture says something the narration doesn't.
-- **1-3 short in-character lines** (1-5 words, e.g. Ilaw's "Lolo?", Mang Oso's "Huwag.") recorded
-  as separate clips or labelled ElevenLabs speakers in a different voice.
-- **No "like and subscribe" outro.** End on the twist or a line that loops into the first line;
-  the CTA is the silent mid-video paper subscribe tag (Phase 6 step 3).
-- **Tone for teens/adults** (witty or spooky, "folklore explained").
-**Voice-over tips (ElevenLabs v3):** expressive voice, stability "Natural" or "Creative", audio
-tags like [whispers] [gasps] sparingly, "…" for a pause, CAPS for one stressed word. A calm,
-storyteller read suits this handmade style. Suggest once that their own voice stands out.
+**Single-narrator script rules (research Nov 2026; one voice carries everything, so the script and
+the picture must do the work).** Why: the first 2-3 s decide "viewed vs swiped away" (the only gate
+YouTube shows you); after that, retention comes from structure, not the voice. YouTube publishes no
+weights for loops, shares or CTAs, so those are extras, never the plan.
+
+*Format.* Shortest length that tells the story with zero slack: Story 30-55 s, Creature card 20-30 s.
+Word budget ≈ 2.5 words/s minus silent beats: 30 s ≈ 65-70 words, 45 s ≈ 95-105, 55 s ≈ 120-130.
+Write the script as numbered beats: `[time] VO line | VISUAL | TAG/ON-SCREEN TEXT (≤5 words or none) |
+SFX/MUSIC`. Template sections from `content-playbook.md` still apply.
+
+*Write in this order:* last line → hook → foreshadow → body. One character, one goal, one problem.
+
+*Hook (0-3 s).* Line 1 = a specific, absurd or scary subject + stakes, said in ≤ 2.5 s (6-10
+words), starting mid-moment. No greeting, no "Did you know", no "Long ago in a village…". Plan the
+FIRST FRAME before the words: it must sell the premise with the sound off. Frame, 2-4 word hook tag
+and spoken line use the SAME key nouns. Concrete beats vague: a year, a number, a name.
+
+*Foreshadow (3-6 s).* Line 2 promises the payoff or asks the question the story answers ("And the
+only thing that died… was the pig." / "So why do lolas still avoid that tree?"). The ending must pay
+off exactly this — a hollow promise loses viewers and YouTube's satisfaction surveys.
+
+*Body.* Chain every beat with "But…" or "So… / Which meant… / That's when…", never "and then";
+cut any beat the previous one didn't cause. A re-hook every 5-10 s (reversal, stakes jump, withheld
+answer, "But that wasn't the weird part."), each marked for a camera move + sound hit. Max two new
+names/facts before the next story beat; 5th-grade words; define any Filipino/old term in passing.
+Sentences mostly 6-12 words, easy to say aloud; 2-4 word punch lines on reversals; no stacked
+clauses. Never signal the end ("finally", "so that's the story") before the payoff.
+
+*Narrator persona (pick one per series, keep it).* Talk like telling a friend: deadpan understatement
+for weird/funny legends, low conspiratorial storyteller for scary ones. Jokes come from timing,
+contrast and the picture — AI voices test as less funny than humans, so never rely on the voice
+"acting" a joke.
+
+*Show, don't narrate.* The narrator gives cause, stakes and reported speech ("The ferryman said
+one word. No."); the picture delivers the joke or scare. Never narrate an emotion the face shows.
+Mark at least 2 beats where the picture says something the narration doesn't, and write a 0.5-1 s
+VO silence ("…" or a line break) after each setup line for the reaction shot + foley hit. Before
+the big reveal: music drops out → silence beat → reveal line → sting.
+- **Narration is the ONLY voice (user rule).** Never ask the user to record character lines or use a
+  second voice, and never set `talk` on an actor. To keep the cast alive, write 1-3 short in-character
+  lines (1-5 words, e.g. Ilaw's "Lolo?", Mang Oso's "Huwag.") as **silent torn-paper tags** on screen
+  (a project `overlays` list drawn in `custom.py` with the same `caption_img` paper label, placed near
+  the speaker and below the caption band), timed to the matching narration beat. Mark them in the
+  script as "Tag:" so the user knows they are text, not audio.
+- **Ending.** Deliver the foreshadowed payoff + a twist, then STOP: last line ≤ 15 words, carries a
+  surprising, quotable, true fact (that's what gets shared), no recap, no moral, no outro, no spoken
+  CTA. A loop (last line incomplete or a question that line 1 answers, last frame matching frame 0)
+  only if it doesn't weaken the twist. The CTA stays the silent mid-video paper subscribe tag.
+- **Tone for teens/adults** (witty or spooky, "folklore explained"); frame folklore as "the legend
+  says…" and note regional versions; every factual claim checked on the web.
+- **Variety (YouTube "inauthentic content" policy names narrated stories that differ only on the
+  surface):** change the hook type, twist type and structure from the previous short, not just names.
+- **Self-check before sending:** word count fits the length; line 1 ≤ 10 words; a re-hook in every
+  10 s window; no "and then"; 2+ picture-only beats; 1-3 tags; last line ≤ 15 words. Fix, then send.
+**Voice-over direction (ElevenLabs; v4 preferred, v3 syntax works):** choose a voice whose natural
+range fits the series persona (it matters more than any setting); on v3 use stability Natural or
+Creative. No SSML `<break>` tags: use "…" for a weighted pause, a line break between beats, commas
+for breath, CAPS on at most 1-2 words per short. At most ONE audio tag per beat ([whispers],
+[sighs], [short pause], [long pause], [curious], [sarcastic]); describe the quality if needed
+("[low, conspiratorial voice]"). Respell hard Filipino/Spanish names in script.txt (or IPA on v4)
+and list pronunciations under the script. Tell the user to regenerate any line that sounds flat and
+keep the best take. Suggest once that their own voice would stand out.
 Save `script/script.md` (full) and `script/script.txt` (narration only, exactly as spoken). Send
 ONE message: the script, the narration in a code block ready to copy, short voice-over
 instructions (MP3/WAV, read exactly, small pauses between sentences). End with:
 "Record it and upload the file, or tell me what to change in the script."
-Uploading the voice-over counts as approving the script. If they changed words while recording,
+Uploading the voice-over counts as approving the script. The voice-over is ONE file with only the
+narrator; never ask for extra voice clips. If they changed words while recording,
 update `script/script.txt` to match.
 
 ### Phase 5 — Process the voice-over (starts as soon as the upload arrives)
@@ -125,8 +173,10 @@ literally? (4) Same face held too long? (5) Does the end cut cleanly back into t
 
 ### Phase 7 — Browser preview  ⛔ approval required
 ```bash
-python3 ~/pds/tools/build_preview.py ~/shorts/<slug>   # preview/: preview.mp4 (half size, with sound) + scene thumbnails + page, ~3-4 min
+python3 ~/pds/tools/build_preview.py ~/shorts/<slug>   # renders final/<slug>.mp4 at full 1080x1920 + preview/ page (light web copy, thumbs), ~11 min for 60 s
 ```
+The preview IS the final render at full size (the user found the old half-size preview blurry), so
+run it in the background and poll until it finishes, and never show a `--half` render as the preview.
 Copy the preview folder into the working directory (the publisher only attaches files from there),
 then publish it with the Artifact tool's publish-from-files: `index.html`, `data.js`, `preview.mp4`,
 every `thumbs/scene_NN.jpg`, `assets/Fraunces-Black.woff` (same paths). **Right after the FIRST
@@ -142,7 +192,7 @@ never promise that the buttons process on their own.
 preview's slug and act on its `text`: kind `notes` → do the revisions; kind `approve` → Phase 8
 (with the thumbnail they named, or ask A/B in the same reply). If it is missing or older than their
 last message, the page fell back to copying: ask them to paste the text instead.
-The preview video comes from the same renderer as the final (half size): never fake it with stills.
+The preview video is the final render (full size, lighter web copy): never fake it with stills.
 **Thumbnails (made at the same time, so no extra waiting):** design 2 NEW thumbnail images.
 NEVER use a frame captured from the video: each is its own composition made to sell this short
 at phone size.
@@ -160,11 +210,11 @@ Revisions: change only the scenes named → lint → build_preview → republish
 quick moving check of one scene you may also render just that range:
 `render.py <dir> --from S --to E --preview --out /tmp/clip.mp4` and send it with SendUserFile.
 
-### Phase 8 — Final render (only after explicit approval)
-```bash
-python3 ~/pds/tools/render.py ~/shorts/<slug>      # → final/<slug>.mp4, ~0.7 s per frame (45 s ≈ 13 min)
-```
-1080×1920, 24 fps, H.264 yuv420p, AAC 192k, -14 LUFS. Run it in the foreground with a long timeout.
+### Phase 8 — Final video (only after explicit approval)
+If the approved preview was built after the last change, `final/<slug>.mp4` is already the final:
+go straight to Phase 9. Only if something changed after the last build_preview, re-run
+`python3 ~/pds/tools/render.py ~/shorts/<slug>` (background + poll, ~0.45 s per frame).
+1080×1920, 24 fps, H.264 CRF 19 yuv420p, AAC 192k, -14 LUFS.
 
 ### Phase 9 — QA, then deliver
 ```bash
@@ -203,10 +253,11 @@ once for the last one's "Stayed to watch" % (YouTube Studio → the Short → An
 with their own earlier Shorts, not a universal target.
 One line of notes + offer the next idea. Update nothing in this skill unless the user asks.
 
-## Series identity (set once, then reuse)
-The first time, propose 2-3 series names that fit the paper/lantern look (different from the
-pastel series) and let the user pick; then keep the same name, title end-tag, hook-text style and
-thumbnail look for every short.
+## Series identity (set: "Things People Actually Invented")
+The user chose the series name **Things People Actually Invented** (Nov 2026). Keep it in every
+short: as the title end-tag only if the title stays ≤ 60 characters, otherwise as a line in the
+description ("Things People Actually Invented — weird things people actually did."); same torn-paper
+hook-tag style and thumbnail look (cream title with dark outline, one yellow word) every time.
 
 ## Avoid "inauthentic / mass-produced" content (YouTube policy, July 2025)
 Every short needs its own story shape, new scenes, at least one new creature/prop or location

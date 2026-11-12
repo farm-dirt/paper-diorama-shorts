@@ -363,8 +363,8 @@ LIGHTS = {  # time-of-day looks: (multiply tint, lift, warmth)
 }
 
 
-def grade(img, glows=(), light='dusk', vignette=0.42, grain=0.022, frame=0, bloom=0.18,
-          letterbox=0, flash=0.0, flash_color='#FFFFFF'):
+def grade(img, glows=(), light='dusk', vignette=0.30, grain=0.010, frame=0, bloom=0.07,
+          letterbox=0, flash=0.0, flash_color='#FFFFFF', sharpen=0.35):
     """glows: (x, y, radius, color, amount) in logical px - lanterns, windows, sun, fireflies.
     Light tint is applied BEFORE glows, so lit lanterns stay bright at night."""
     h, w = img.shape[:2]
@@ -398,6 +398,8 @@ def grade(img, glows=(), light='dusk', vignette=0.42, grain=0.022, frame=0, bloo
     if flash > 0:
         out = out * (1 - flash) + hexc(flash_color) * flash
     out = np.clip(out, 0, 1)
+    if sharpen > 0:  # gentle unsharp mask: keeps the paper edges crisp on phones (user found the look blurry)
+        out = np.clip(out * (1 + sharpen) - cv2.GaussianBlur(out, (0, 0), 1.2 * K) * sharpen, 0, 1)
     if letterbox:
         lb = int(letterbox * K)
         out[:lb] = 0
