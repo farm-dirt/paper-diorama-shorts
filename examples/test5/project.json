@@ -1,0 +1,153 @@
+{
+ "id": "test5",
+ "slug": "test5",
+ "title": "Paper test",
+ "fps": 24,
+ "voice": "voice.wav",
+ "captionY": 420,
+ "hook": {
+  "text": "She *followed* the light\u2026",
+  "s": 0,
+  "e": 1.6
+ },
+ "captions": [
+  {
+   "s": 2.6,
+   "e": 3.6,
+   "text": "into the *balete* forest"
+  },
+  {
+   "s": 3.6,
+   "e": 5.0,
+   "text": "and something *moved*"
+  }
+ ],
+ "scenes": [
+  {
+   "start": 0,
+   "end": 2.5,
+   "set": "harbor",
+   "variant": "dusk",
+   "desc": "push-in on the two at the dock, Ilaw looks up",
+   "cam": {
+    "from": [
+     0,
+     0,
+     1.0
+    ],
+    "to": [
+     40,
+     -60,
+     1.18
+    ],
+    "ease": "inOut"
+   },
+   "actors": [
+    {
+     "who": "mang_oso",
+     "mark": "L",
+     "pose": {
+      "prop": "oar"
+     },
+     "talk": [
+      [
+       0.3,
+       1.2
+      ]
+     ]
+    },
+    {
+     "who": "ilaw",
+     "mark": "CR",
+     "pose": "idle",
+     "keys": [
+      {
+       "t": 1.1,
+       "pose": "look_up",
+       "dur": 0.3
+      }
+     ]
+    },
+    {
+     "who": "kupas",
+     "mark": "R",
+     "face": -1,
+     "pose": "wag"
+    }
+   ]
+  },
+  {
+   "start": 2.5,
+   "end": 5.0,
+   "set": "forest",
+   "desc": "Ilaw walks in, freezes; rack focus to ferns, camera shake",
+   "cam": {
+    "from": [
+     0,
+     40,
+     1.08
+    ],
+    "to": [
+     0,
+     0,
+     1.0
+    ]
+   },
+   "rack": {
+    "t": 4.1,
+    "to": 1.2,
+    "dur": 0.6
+   },
+   "shake": {
+    "t": 4.0,
+    "dur": 0.4,
+    "amp": 12
+   },
+   "actors": [
+    {
+     "who": "ilaw",
+     "mark": "L",
+     "walk": {
+      "s": 2.5,
+      "e": 3.9,
+      "to": "C"
+     },
+     "keys": [
+      {
+       "t": 3.95,
+       "pose": "scared",
+       "dur": 0.2
+      }
+     ]
+    },
+    {
+     "who": "kupas",
+     "mark": "CL",
+     "x": 150,
+     "walk": {
+      "s": 2.6,
+      "e": 3.9,
+      "to": "CR"
+     },
+     "keys": [
+      {
+       "t": 3.95,
+       "pose": "scared",
+       "dur": 0.2
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sfx": [
+  {
+   "t": 2.5,
+   "name": "whoosh"
+  },
+  {
+   "t": 4.0,
+   "name": "thud"
+  }
+ ]
+}
