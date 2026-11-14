@@ -165,6 +165,15 @@ viewer feel why it mattered.
   the story's events. In the script message, offer 4-5 last-line options with your pick and why;
   the user chooses. No "and that is the story of…".
 
+*Old-world wording (user rule, 14 Nov 2026).* Give the narration a light medieval, royal flavour so the
+myth feels like it comes from an old court, but clarity rules always win. Use 3-6 such words per script,
+only where they mean exactly the same as the plain word and a teen would understand them instantly:
+feast (not dinner), hall, realm, kingdom, throne, mortal, oath, vow, decree, tribute, quest, beast, foe,
+banished, cursed, foretold, omen, lord, maiden, cloak, goblet, chamber, warrior, sorcery, fate, doom.
+Never: thee/thou/thy, hath/doth/'tis, forsooth, verily, ye, "-eth" verbs, or rare words people must
+look up. Never swap a word that explains who someone is or why they act, never in the first 4 words of
+the hook unless it's a plain word like "beast". Run the "eyes-closed test" again after adding them.
+
 *Narrator persona (pick one per short, by the story's mood; say which in the script message).* Talk like telling a friend: deadpan understatement
 for weird/funny legends, low conspiratorial storyteller for scary ones, calm and serious for tragic myths (Icarus, Orpheus:
 slower pace, no jokes in the narration, the feeling comes from the memorable lines and the silences). Jokes come from timing,
@@ -360,7 +369,9 @@ quick moving check of one scene you may also render just that range:
 If the approved preview was built after the last change, `final/<slug>.mp4` is already the final:
 go straight to Phase 9. Only if something changed after the last build_preview, re-run
 `python3 ~/pds/tools/render.py ~/shorts/<slug>` (background + poll, ~0.45 s per frame).
-1080×1920, 24 fps, H.264 CRF 19 yuv420p, AAC 192k, -14 LUFS.
+1080×1920, 24 fps, H.264 CRF 19 `-tune animation`, keyframe every 10 s, yuv420p, AAC 192k, -14 LUFS.
+(These settings are in render.py: about half the file size of the old 1-s-keyframe setting with the same
+or better measured quality; the moving film grain is what makes these files big.)
 
 ### Phase 9 — QA, then deliver
 ```bash
@@ -369,8 +380,7 @@ python3 ~/pds/tools/qa.py ~/shorts/<slug> ~/shorts/<slug>/final/<slug>.mp4
 All lines must PASS. Open `scenes/contact_sheet.jpg` and check: same character designs in every
 shot, captions readable and not on faces, nothing cut off, no empty/odd frames. Fix → re-render → re-QA.
 Re-render the chosen thumbnail from its JSON (in case anything changed) as
-`final/<slug>_thumbnail.png`, plus a 1280×720 version `final/<slug>_thumbnail_16x9.png` (same art,
-title kept inside the frame).
+`final/<slug>_thumbnail.png` (vertical 1080×1920 only; no landscape 16:9 version, user rule 14 Nov 2026).
 **Name the final video `<slug>-tinylore.mp4` (user rule, every short):** once QA passes, run
 `mv ~/shorts/<slug>/final/<slug>.mp4 ~/shorts/<slug>/final/<slug>-tinylore.mp4`. That is the file you
 send and copy. (If you re-render later, the engine writes `<slug>.mp4` again: re-QA it, then rename again.)

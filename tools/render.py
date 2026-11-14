@@ -3,7 +3,7 @@
 
 usage: python3 render.py PROJECT_DIR [--preview] [--from S] [--to E] [--out FILE] [--workers N] [--noaudio]
   --preview   half resolution (540x960), fast encode -> preview/preview.mp4
-  default     1080x1920, 24 fps, H.264 CRF 16 yuv420p, AAC 192k, +faststart -> final/<slug>.mp4
+  default     1080x1920, 24 fps, H.264 CRF 19 -tune animation, keyframe every 10 s, yuv420p, AAC 192k, +faststart -> final/<slug>.mp4
 Frames are split into contiguous chunks across CPU workers; each worker builds the
 sets once and reuses cached paper layers, then the chunks are joined and the audio
 mix (audio/mix.wav, else the raw voice-over) is added.
@@ -27,8 +27,10 @@ def work(args):
     from director import Director
     D = Director(pdir)
     w, h = int(math.ceil(1080 * k)), int(math.ceil(1920 * k))
-    enc = ['-c:v', 'libx264', '-preset', 'veryfast' if preview else 'medium', '-crf', '28' if preview else '19',
-           '-pix_fmt', 'yuv420p', '-g', str(fps)]
+    # final: -tune animation + a keyframe every 10 s halves the file (paper grain is costly) at equal/better
+    # SSIM and PSNR vs the old '-g fps' setting, same encode time (tested 14 Nov 2026)
+    enc = (['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-g', str(fps)] if preview else
+           ['-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-g', str(fps * 10)])
     ff = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{w}x{h}',
                            '-r', str(fps), '-i', '-', *enc, seg], stdin=subprocess.PIPE)
     t0 = time.time()
