@@ -9,7 +9,7 @@
   one card per scene (thumbnail, what is said, notes box, Play this scene), loop, full screen, and
   Send notes / Approve buttons that save to the page's db at `feedback/latest`.
 - `render.py` splits the frames across the CPU cores and pipes them into **FFmpeg** (H.264).
-- `timing.py` + `audio.py` analyse the voice and synthesise music/SFX (no downloads, no copyright issues).
+- `timing.py` + `audio.py` analyse the voice and mix music/SFX: synthesised ones, or the user's own recorded library in `assets/sfx/` and `assets/music/` (see the READMEs there).
 - Not used: Blender/real 3D (much bigger install and learning curve), Whisper (model download blocked).
 
 ## Commands (Claude runs them; the user never types commands)

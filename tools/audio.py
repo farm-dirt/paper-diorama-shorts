@@ -12,6 +12,7 @@ LEVELS (user preference: background must never fight the voice):
   music  = 8 % of the voice level during speech (-22 dB), rises to 14 % in long pauses
   sfx    = peaks at 35 % of the voice peak
 Override in project.json: "mix": {"music": 0.08, "musicPause": 0.14, "sfx": 0.35}
+Recorded music: "music": {"track": "greek_folk", "start": 0, "stops": [[a, b]]} (files in assets/music/)
 """
 import json, os, subprocess, sys, re
 import numpy as np
@@ -165,6 +166,33 @@ def music(dur, bpm=112, key=0, stops=()):
     return out
 
 
+MUSIC_DIR = os.path.join(os.path.dirname(SFX_DIR), 'music')
+
+
+def music_tracks():
+    if not os.path.isdir(MUSIC_DIR): return []
+    return sorted(os.path.splitext(f)[0] for f in os.listdir(MUSIC_DIR)
+                  if os.path.splitext(f)[1].lower() in ('.wav', '.mp3', '.flac', '.ogg'))
+
+
+def music_track(name, dur, start=0.0, stops=()):
+    """Recorded music bed from assets/music/<name>: starts at `start` s, loops (1 s crossfade) to fill
+    `dur`, fades in 1 s, applies the same stops as the synth bed (hard drop, 0.15 s fade back)."""
+    path = next(os.path.join(MUSIC_DIR, f) for f in os.listdir(MUSIC_DIR) if os.path.splitext(f)[0] == name)
+    src = load_audio(path)[int(start * SR):]
+    n = int(dur * SR); out = src.copy(); xf = SR
+    while len(out) < n:
+        a, b = out[-xf:], src[:xf]; r = np.linspace(0, 1, xf)
+        out = np.concatenate([out[:-xf], a * (1 - r) + b * r, src[xf:]])
+    out = out[:n]
+    fi = min(SR, n); out[:fi] *= np.linspace(0, 1, fi)
+    for a, b in stops:
+        i0, i1 = int(a * SR), int(b * SR); out[i0:i1] = 0
+        f2 = min(int(0.15 * SR), len(out) - i1)
+        if f2 > 0: out[i1:i1 + f2] *= np.linspace(0, 1, f2)
+    return out
+
+
 def rms(x):
     return float(np.sqrt(np.mean(x ** 2)) + 1e-12)
 
@@ -187,7 +215,13 @@ def main():
     bed = np.zeros(len(voice))
     mcfg = proj.get('music', {'on': True})
     if mcfg.get('on', True):
-        m = music(dur, mcfg.get('bpm', 112), mcfg.get('key', 0), mcfg.get('stops', []))[:len(voice)]
+        if mcfg.get('track'):
+            if mcfg['track'] not in music_tracks():
+                sys.exit('!! unknown music track %s -> available: %s' % (mcfg['track'], ', '.join(music_tracks())))
+            m = music_track(mcfg['track'], dur, mcfg.get('start', 0.0), mcfg.get('stops', []))[:len(voice)]
+        else:
+            m = music(dur, mcfg.get('bpm', 112), mcfg.get('key', 0), mcfg.get('stops', []))[:len(voice)]
+        if len(m) < len(voice): m = np.concatenate([m, np.zeros(len(voice) - len(m))])
         m = m / rms(m) * vr
         # gain curve: music% during speech, musicPause% in pauses >= 0.6 s, smoothed 150 ms
         g = np.full(len(voice), mixcfg['music'])
@@ -224,6 +258,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--list':
         print(', '.join(sorted(SFX)))
+        print('music tracks:', ', '.join(music_tracks()) or 'none (assets/music/ is empty)')
         print('recorded:', ', '.join(sorted(RECORDED)) if RECORDED else 'none (assets/sfx/ is empty or missing)')
     else:
         main()
