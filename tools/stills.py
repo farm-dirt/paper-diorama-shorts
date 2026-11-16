@@ -26,6 +26,7 @@ def main():
         from director import Director
         D = Director(pdir)
         D.life = False
+        D.thumb = True
         sc = json.load(open(opt('--thumb')))
         sc.update(start=0, end=1)
         D.proj = dict(D.proj, scenes=[sc], captions=[], hook=None, cta=None)
@@ -61,7 +62,8 @@ def main():
     paperkit.set_res(k)
     from director import Director
     D = Director(pdir)
-    ts = [float(x) for x in a[1:] if not x.startswith('--') and x not in (out, opt('--k'))]
+    skip = {i + 1 for i, x in enumerate(a) if x in ('--out', '--k')}  # the values that follow these flags
+    ts = [float(x) for i, x in enumerate(a) if i > 0 and i not in skip and not x.startswith('--')]
     frames = [D.frame(t, i) for i, t in enumerate(ts)]
     strip = np.hstack(frames)
     out = out or '/tmp/stills.jpg'

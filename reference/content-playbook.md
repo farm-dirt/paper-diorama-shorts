@@ -6,25 +6,30 @@ Retention comes from a clear story shape and a payoff near the end that rewards 
 (last line flows into the first) increase rewatches. Animation is strongest where live footage
 can't easily go: history, "what if", inside-the-body/how-it-works, exaggerated comedy.
 
-## Recommended categories (pitch 6-8, explain each in one line)
-| Category | Why it suits Shorts + this paper-diorama style |
-|---|---|
-| Weird-but-true history | Built-in curiosity hook ("In 1932 Australia lost a war… to birds"); characters act it out. |
-| Strange laws & rules | Instant "wait, what?" hook, short, easy twist ending. |
-| How-it-works in 40 s | Educational value + satisfying visual explanation (props, signs). |
-| Psychology / money tricks | Relatable (shops, prices, habits); the village set and Mang Oso suit it. |
-| Animal facts with a twist | Shareable, family-friendly; easy props/sound gags. |
-| Myth vs fact | Strong hook ("You've been doing X wrong"), clear payoff. |
-| Mini comedy sketches | Pure physical comedy like the reference; no facts needed, high rewatch. |
-| Local culture & legends (e.g. Philippines) | DEFAULT for this skill. Handmade paper + lantern light + night forest = folklore mood; underserved niche. |
-Pick one top recommendation and say why (given the user's goals and limited time).
+## Channel niche: Olympus Drama (Tiny Olympus)
+The paper channel's fixed niche (user's choice, 15 Nov 2026) is **Greek gods behaving badly**, told
+like celebrity gossip with a twist ending. SKILL.md Phase 2-4 has the full rules; this file is the
+quick reference. Philippine creatures and legends belong to the pastel channel: never pitch them here.
+
+| Story type | Why it works | Example (check the source before pitching) |
+|---|---|---|
+| Affair + cover-up | Disguise, lies, a near-miss: natural suspense | Io hidden as a cow |
+| Hera's revenge | A doubter/detective who is usually right | Echo cursed for covering for Zeus |
+| Caught in the act | A trap and a public reveal | Ares and Aphrodite in Hephaestus's net |
+| Petty feud / custody fight | Two gods, one prize, an absurd ruling | Aphrodite vs Persephone over Adonis |
+| Absurd punishment | A tiny mistake, a huge forever price | Alektryon turned into a rooster |
+| Mortal outsmarts a god | Underdog win, satisfying reversal | Sisyphus chaining Death |
+**Tell the drama, never the bedroom:** many "affairs" are assaults in the sources. The jokes land on
+the gods, never on the woman; no sexual detail or innuendo in narration, picture or tags.
 
 ## Idea card format (10 per category)
 **Title** (≤ 60 chars, curiosity) · **Description** (1-2 lines) · **Hook** (the exact first line
 + first image) · **Story potential** ★1-5 with reason · **Animation fit** (which cast, locations,
-gags). Cast here: Ilaw, Mang Oso, Kupas; sets: harbor, room, forest, village. Facts must be verified with a web search before pitching.
+gags). Greek cast: zeus, hera, aphrodite, ares, mortal_man, mortal_woman (more with
+`greek.add_figure` in custom.py); Greek sets: temple, olympus, sea_cliff, cave (see animation-guide).
+Facts must be verified with a web search before pitching, naming the ancient source.
 
-## Script template (30-55 s, ~2.6 spoken words per second)
+## Script template (Story 40-70 s, ~2.5 spoken words per second; SKILL.md Phase 4 is the full rule set)
 | Section | Time | Job |
 |---|---|---|
 | Hook | 0-2 s | A question or impossible-sounding claim + strongest image. No "hi guys". |

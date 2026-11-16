@@ -46,6 +46,17 @@ DOG = {
 }
 POSES = {'ilaw': HUMAN, 'mang_oso': HUMAN, 'kupas': DOG}
 DEFAULT_SCALE = {'ilaw': 0.86, 'mang_oso': 0.82, 'kupas': 0.72}
+
+import greek  # noqa: E402  registers the Greek sets + cast (Tiny Olympus starter kit)
+for _n in greek.FIGURES:
+    POSES.setdefault(_n, HUMAN)
+    DEFAULT_SCALE.setdefault(_n, greek.SCALE[_n])
+    LEG.setdefault(_n, greek.LEGS[_n])
+
+
+def leg_len(who, rig):
+    """Leg length for the walk; characters added in custom.py fall back to a third of their height."""
+    return LEG.get(who, rig.height * 0.33)
 NUMERIC_DEFAULTS = {'blink': 0.0, 'mouth': 0.0, 'look': 0.0, 'eyes': 1.0, 'brow': 0.0, 'bob': 0.0}
 
 
@@ -86,6 +97,7 @@ class Director:
             if hasattr(self.custom, 'register'):
                 self.custom.register(CAST, self.rigs, POSES, SETS)
         self.life = True  # False = no auto blink (thumbnails, model sheets)
+        self.thumb = False  # True while stills.py renders a thumbnail (no silent tags)
         self._font_cache = {}
         self._cap_cache = {}
 
@@ -165,7 +177,7 @@ class Director:
             if moving:
                 scale = a.get('scale', DEFAULT_SCALE.get(who, 0.8))
                 if who == 'kupas':
-                    stride = 2 * LEG[who] * scale * math.sin(math.radians(24)) * 1.4
+                    stride = 2 * leg_len(who, rig) * scale * math.sin(math.radians(24)) * 1.4
                     ph = math.pi * dist / max(1.0, stride)
                     sw = math.sin(ph)
                     for b_, sgn in (('legFL', 1), ('legBR', 1), ('legFR', -1), ('legBL', -1)):
@@ -173,10 +185,10 @@ class Director:
                     pose['bob'] = pose.get('bob', 0) - 4 * abs(math.sin(ph))
                     pose['head'] = pose.get('head', 0) + 3 * math.sin(2 * ph)
                 else:
-                    stride = 0.55 * LEG[who] * scale  # one step (front-on puppet walk)
+                    stride = 0.55 * leg_len(who, rig) * scale  # one step (front-on puppet walk)
                     ph = math.pi * dist / max(1.0, stride)
                     sw = math.sin(ph)
-                    lift = 0.07 * LEG[who]
+                    lift = 0.07 * leg_len(who, rig)
                     pose['legL_dy'] = -lift * max(0.0, sw)
                     pose['legR_dy'] = -lift * max(0.0, -sw)
                     pose['legL'] = pose.get('legL', 0) + 5 * max(0.0, sw)
@@ -185,7 +197,7 @@ class Director:
                     pose['armL'] = pose.get('armL', rig.bones['armL'].get('rest', 0)) + 9 * sw
                     pose['torso'] = pose.get('torso', 0) + 2.5 * sw
                     pose['head'] = pose.get('head', rig.bones['head'].get('rest', 0)) - 1.5 * sw
-                    pose['bob'] = pose.get('bob', 0) - 0.03 * LEG[who] * abs(sw)
+                    pose['bob'] = pose.get('bob', 0) - 0.03 * leg_len(who, rig) * abs(sw)
         return pose
 
     def walk_x(self, a, t):
@@ -288,8 +300,8 @@ class Director:
         f = self.font(int(size * k))
         words = []
         for w in text.split():
-            hl = w.startswith('*') and w.endswith('*') or w.startswith('*')
-            words.append((w.strip('*'), hl or (w.endswith('*') and not w.startswith('*'))))
+            # *word* = highlighted; punctuation may sit outside the stars ("*cow*." or "(*cow*)")
+            words.append((w.replace('*', ''), '*' in w))
         # simple greedy wrap
         lines, cur = [], []
         for w in words:
@@ -370,7 +382,7 @@ class Director:
                 u = (t - c['s']) / 0.12
                 dy = 16 * (1 - ease(u, 'out')) if u < 1 else 0
                 self.paste(out, self.caption_img(c['text'], 66), 540, P.get('captionY', 420) + dy)
-        for o in (P.get('overlays') or []) if hook is not None else []:  # silent tags (none on thumbnails)
+        for o in (P.get('overlays') or []) if not self.thumb else []:  # silent tags (none on thumbnails)
             if o['s'] <= t < o['e']:
                 u = (t - o['s']) / 0.16
                 sc_ = 0.6 + 0.4 * ease(u, 'back') if u < 1 else 1.0

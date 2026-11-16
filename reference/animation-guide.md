@@ -50,17 +50,26 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
   "size": 72, "rot": -3}]` draws torn-paper labels in screen space (`*word*` = lantern red) for
   character lines ("MY *POTATOES!*"), labels ("USA"), counters ("*12* YEARS") or a year ticker. Keep
   them near the speaker, below the caption band; not drawn on thumbnails.
-- `talk`: true (whole scene) or windows [[s,e]]; mouth follows the voice loudness. Only for the
-  character who is actually speaking (in-character lines), never for the narrator.
+- `talk` exists in the engine but is NOT used: the narrator is the only voice (SKILL.md rule), so
+  never set it. Character lines go in silent `overlays` tags instead.
 
 ## Pose library
-Humans (ilaw, mang_oso): idle, wave, point, point_up, shock, scared, sad, happy, cheer, think,
-angry, look_up, look_back, cower, shrug.  Dog (kupas): idle, wag, alert, bark, sad, scared, happy.
+Humans (zeus, hera, aphrodite, ares, mortal_man, mortal_woman, ilaw, mang_oso): idle, wave, point,
+point_up, shock, scared, sad, happy, cheer, think, angry, look_up, look_back, cower, shrug.  Dog (kupas): idle, wag, alert, bark, sad, scared, happy.
 Face values usable in any pose dict: `eyes` (0.6 squint … 1.5 wide), `brow` (-1 worried … 1 angry),
 `mouth` 0-1, `look` -1…1, `blink`, `bob` (px). Bones: root, torso, head, armR, armL, legL, legR
-(+ lantern for Ilaw, oar for Mang Oso with `"prop": "oar"`; dog: head, tail, body, legFL/FR/BL/BR).
+(+ `held` for the Greek cast, drawn with `"prop": "bolt|trident|spear|goblet|apple|scroll"`; lantern for Ilaw, oar for Mang Oso
+with `"prop": "oar"`; dog: head, tail, body, legFL/FR/BL/BR).
 
 ## Sets (locations) and variants
+Greek sets (Tiny Olympus, `engine/greek.py`) — the default for this channel:
+| set | variants | marks (x) | good for |
+|---|---|---|---|
+| temple | day, dusk, night | L 250 · CL 400 · C 540 · CR 680 · R 820 | mortals praying, oaths, curses, the "scene of the crime" |
+| olympus | day, storm | L 260 · CL 400 · C 550 · CR 700 · R 820 | the gods at home, arguments, rulings (gold throne centre; `storm` flashes lightning) |
+| sea_cliff | day, storm | L 260 · CL 400 · C 560 · CR 690 · R 820 | voyages, sea gods, falls, shipwrecks |
+| cave | fire, dark | L 260 · CL 400 · C 560 · CR 700 · R 820 | giants, monsters, hiding, the underworld's door |
+Folklore sets from the first version (not for Greek shorts unless the user asks):
 | set | variants | marks (x) | good for |
 |---|---|---|---|
 | harbor | dusk, night | L 290 · CL 450 · C 560 · CR 680 · R 830 | journeys, sea legends, goodbyes |
@@ -95,6 +104,9 @@ strange trait made huge, 3-5 colours, no outlines. Static creature layers can pa
 - Gags and reactions land on the word: key time = word start − 0.08 s.
 - Sound for every visible action (step, grab, flap, landing); a silence (`music.stops`) right
   before the scare/punchline.
-- Variety: change set/variant or angle (zoom/pan) between consecutive scenes; reuse the cast as
-  recurring witnesses so viewers recognise them across the series.
+- Variety: change set/variant or angle (zoom/pan) between consecutive scenes; reuse the same gods
+  (same designs from greek.py) so viewers recognise them across the series.
 - Captions sit at `captionY` (~420); keep heads below ~520 on screen (lint checks this).
+- **Shorts safe box** (lint checks it): faces inside x 48-888 and y 180-1500; no faces in the caution
+  strip y 1250-1500. Every short needs a `cta` at 45-60 % (lint fails without one). Never cue `wind`
+  or `dark_click` (deleted; audio.py and lint refuse them).

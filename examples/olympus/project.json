@@ -1,0 +1,146 @@
+{
+ "id": "olympus",
+ "slug": "olympus",
+ "title": "Greek example",
+ "fps": 24,
+ "voice": "voice.wav",
+ "captionY": 420,
+ "hook": {
+  "text": "Zeus hid her as a *cow*",
+  "s": 0,
+  "e": 2.0
+ },
+ "captions": [
+  {
+   "s": 2.6,
+   "e": 4.0,
+   "text": "hera is *not* fooled"
+  }
+ ],
+ "overlays": [
+  {
+   "s": 3.2,
+   "e": 4.6,
+   "text": "Nice *cow*.",
+   "x": 700,
+   "y": 760,
+   "size": 64,
+   "rot": -3
+  }
+ ],
+ "music": {
+  "track": "greek_folk",
+  "start": 0,
+  "stops": [
+   [
+    4.3,
+    4.6
+   ]
+  ]
+ },
+ "sfx": [
+  {
+   "t": 0.2,
+   "name": "thunder",
+   "gain": 0.6,
+   "dur": 1.4,
+   "fadeOut": 0.6
+  },
+  {
+   "t": 2.4,
+   "name": "paper_tear"
+  }
+ ],
+ "cta": {
+  "s": 2.5,
+  "e": 5.1,
+  "tap": 0.95
+ },
+ "scenes": [
+  {
+   "start": 0,
+   "end": 2.4,
+   "set": "temple",
+   "variant": "day",
+   "desc": "Wide on the temple, Zeus points the blame away (establishing + the lie)",
+   "cam": {
+    "from": [
+     0,
+     0,
+     1.0
+    ],
+    "to": [
+     0,
+     -40,
+     1.12
+    ]
+   },
+   "actors": [
+    {
+     "who": "zeus",
+     "mark": "CL",
+     "pose": {
+      "prop": "bolt"
+     },
+     "keys": [
+      {
+       "t": 1.2,
+       "pose": "shrug",
+       "dur": 0.3
+      }
+     ]
+    },
+    {
+     "who": "mortal_woman",
+     "mark": "CR",
+     "pose": "scared"
+    }
+   ]
+  },
+  {
+   "start": 2.4,
+   "end": 5.5,
+   "set": "olympus",
+   "variant": "storm",
+   "desc": "Push in on Hera's suspicion (tension), lightning behind",
+   "cam": {
+    "from": [
+     0,
+     0,
+     1.0
+    ],
+    "to": [
+     40,
+     -60,
+     1.15
+    ]
+   },
+   "actors": [
+    {
+     "who": "hera",
+     "mark": "CR",
+     "pose": "angry",
+     "keys": [
+      {
+       "t": 3.6,
+       "pose": "point",
+       "dur": 0.3
+      }
+     ]
+    },
+    {
+     "who": "zeus",
+     "mark": "CL",
+     "pose": "idle",
+     "keys": [
+      {
+       "t": 4.0,
+       "pose": "shock",
+       "dur": 0.25
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -8,6 +8,10 @@ from cast import CAST
 import director as DR
 import sets as SETS
 
+SAFE_L, SAFE_R, SAFE_T, CAUTION, SAFE_B = 48, 888, 180, 1250, 1500   # YouTube Shorts safe box on the 1080x1920 screen
+FACE_HW = 50                                                          # about half a face's width at default scale
+BANNED_SFX = {'wind', 'dark_click'}                                   # user rule, Nov 2026
+
 
 def main():
     P = sys.argv[1]
@@ -53,19 +57,33 @@ def main():
                 for xv in xs:
                     x = marks.get(xv, 560) if isinstance(xv, str) else xv
                     sx = zz * x + (1 - zz) * 540 - c[0]
-                    if not 70 < sx < 1010: probs.append(f'scene {i}: {a["who"]} off screen (x={sx:.0f}) with camera {c}')
+                    # Shorts safe box (SKILL.md): faces inside x 48-888 (the right 192 px are the like/share buttons)
+                    if not SAFE_L + FACE_HW < sx < SAFE_R - FACE_HW * zz:
+                        where = 'under the YouTube buttons' if sx >= SAFE_R - FACE_HW * zz else 'too close to the left edge'
+                        probs.append(f'scene {i}: {a["who"]} face {where} (x={sx:.0f}, safe box x {SAFE_L}-{SAFE_R}) with camera {c}')
                 scale = a.get('scale', 0.8)
                 head = a.get('y', floor) - rigs[a['who']].height * scale * 0.95
                 sy = zz * head + (1 - zz) * 960 - c[1]
+                if sy < SAFE_T:
+                    probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is under the YouTube search bar (y < {SAFE_T})')
+                elif sy > SAFE_B:
+                    probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is in the bottom YouTube UI zone (y > {SAFE_B})')
+                elif sy > CAUTION and a['who'] != 'kupas':
+                    probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is in the caution strip (y {CAUTION}-{SAFE_B}): raise, zoom or tilt the camera')
                 if a['who'] != 'kupas' and sy < capY + 90 and proj.get('captions'):
                     probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) runs into the caption band (y={capY}) - zoom less / lower captionY')
                 if L > 2.5 and not a.get('keys') and not a.get('walk') and not a.get('talk'):
                     probs.append(f'scene {i}: {a["who"]} holds one pose for {L:.1f} s - add a key (reaction)')
     if not proj.get('hook'): probs.append('add "hook": {"text": "2-4 words", "s": 0, "e": 2}')
     cta = proj.get('cta')
-    if cta:
+    if not cta:
+        probs.append('no subscribe CTA: add "cta": {"s": S, "e": S + 2.6, "tap": 0.95} at 45-60 % of the video')
+    else:
         if cta['s'] < 3 or cta['e'] > dur - 3: probs.append('cta must not be in the first or last 3 s')
         if not (0.4 * dur <= cta['s'] <= 0.65 * dur): probs.append(f'cta start {cta["s"]} should be ~45-60 % of {dur:.1f} s')
+    for cue in proj.get('sfx', []):
+        if cue.get('name') in BANNED_SFX:
+            probs.append(f'banned sound "{cue["name"]}" at {cue.get("t")} s (user rule): remove it')
     for c in proj.get('captions', []):
         if len(c['text'].replace('*', '')) > 26: probs.append(f'caption too long (max ~26 chars): "{c["text"]}"')
     if probs:

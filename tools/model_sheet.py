@@ -6,6 +6,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'engine'))
 from paperkit import Scene, Layer, grade
 from cast import CAST
+import sets  # noqa: F401
+import greek  # noqa: F401  (adds the Greek cast to CAST)
 
 
 def main():
