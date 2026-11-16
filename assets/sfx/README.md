@@ -11,5 +11,5 @@ All files: leading silence trimmed, mono 48 kHz, long ambiences cut to 60 s. Che
 - Magic: `magic_sparkle`, `bell`
 - Comedy / UI: `falling_whistle`, `pop`
 - Action: `sword_clash`, `rocks`, `water_splash`, `thunder`, `door_creak`, `footsteps_gravel`
-- Creatures/body: `monster_growl`, `heartbeat`
+- Creatures/body: `monster_growl`, `heartbeat`, `rooster_crow` (synthesized cartoon crow, 1.1 s)
 - Ambience (quiet `gain` 0.3-0.5, use `dur` + fades): `wind` (soft), `wind_howl` (strong), `fire_crackle`, `night_ambience`, `horror_drone`
