@@ -8,13 +8,14 @@ Outputs:
   envFps,env loudness envelope 0..1 at 30 fps (drives mouth flaps)
   speech     [[start,end],...] speaking segments
   pauses     [[start,end],...] silences >= 0.18 s
-  sentences  [{s,e,text}]  (only with --script) each sentence snapped to real pauses
+  sentences  [{s,e,text}]  (only with --script) each sentence snapped to real pauses, or taken
+             exactly from VOICE.sentences.json when voice.py wrote one (more reliable)
   words      [{w,s,e}]     (only with --script) estimated word times
   captions   [{s,e,text}]  (only with --script) draft 1-3 word caption chunks
 No Whisper needed: sentence edges come from the real pauses, words inside a
 sentence are spread by syllable count and snapped to the nearest energy dip.
 """
-import json, re, subprocess, sys
+import json, os, re, subprocess, sys
 import numpy as np
 
 SR = 16000
@@ -92,9 +93,14 @@ def main():
            'speech': speech, 'pauses': pauses}
 
     if script:
+        script = re.sub(r'^\s*\[pause[^\]]*\]\s*$', '', script, flags=re.I | re.M)  # voice.py silence markers
+        side = os.path.splitext(voice)[0] + '.sentences.json'
+        exact = json.load(open(side)) if os.path.exists(side) else None
         text = re.sub(r'\s+', ' ', script).strip()
         ABBR = r'(?<!\bMr\.)(?<!\bMs\.)(?<!\bDr\.)(?<!\bSt\.)(?<!\bvs\.)(?<!\bMrs\.)(?<!\bJr\.)(?<!\bSr\.)'
         sents = [s.strip() for s in re.split(ABBR + r'(?<=[.!?…])\s+', text) if s.strip()]
+        if exact:
+            sents = [e['text'] for e in exact]
         K = len(sents)
         # inner pauses (not leading/trailing silence), longest K-1 become sentence breaks
         inner = [p for p in pauses if p[0] > speech[0][0] + 0.05 and p[1] < speech[-1][1] - 0.05] if speech else []
@@ -114,6 +120,8 @@ def main():
                 tt = t0 + (t1 - t0) * acc / tot
                 edges += [tt, tt]
         edges.append(t1)
+        if exact:
+            edges = [v for e in exact for v in (e['s'], e['e'])]
         sentences, words = [], []
         dips = d10  # for snapping
         for k, s in enumerate(sents):

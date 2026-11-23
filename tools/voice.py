@@ -10,6 +10,10 @@ How it reads the script:
   * one sentence at a time, joined with a short pause (0.30 s) so timing.py
     can snap sentences to real pauses; a blank line = new paragraph (0.45 s).
   * "..." inside a sentence becomes the voice's own pause.
+  * a line "[pause 3.2]" adds exactly that many seconds of silence (for sound-only
+    beats, e.g. food/ASMR moments); it is never read aloud.
+  * also writes OUT.sentences.json with the EXACT start/end of every sentence;
+    timing.py uses it instead of guessing sentence edges from pauses.
   * hard names: pronounce.json maps a spelling to one the voice says right
     ({"Thales": "Thaylees"}). Engine-wide list: tools/pronounce.json;
     a project can add its own (project-files/pronounce.json, passed with --pronounce).
@@ -98,25 +102,47 @@ def main():
     voice = opt.get('--voice', DEFAULT_VOICE)
     speed = float(opt.get('--speed', 1.0))
     m = load_map(opt.get('--pronounce'))
-    pars = [p for p in re.split(r'\n\s*\n', open(script).read()) if p.strip()]
-    chunks, sr = [], 24000
-    for pi, par in enumerate(pars):
-        sents = sentences(' '.join(par.split()))
+    raw = open(script).read()
+    PAUSE = re.compile(r'^\s*\[pause\s+([0-9.]+)\s*s?\]\s*$', re.I | re.M)
+    # split into paragraphs; a [pause N] line is its own item
+    items = []
+    for par in re.split(r'\n\s*\n', raw):
+        buf = []
+        for line in par.split('\n'):
+            mm = PAUSE.match(line)
+            if mm:
+                if buf: items.append(('text', ' '.join(buf))); buf = []
+                items.append(('pause', float(mm.group(1))))
+            elif line.strip():
+                buf.append(line.strip())
+        if buf: items.append(('text', ' '.join(buf)))
+    chunks, sr, pos, stimes, last_gap = [], 24000, 0, [], 0
+    for ii, (kind, val) in enumerate(items):
+        if kind == 'pause':
+            if last_gap:  # replace the normal gap after the previous sentence
+                chunks.pop(); pos -= last_gap; last_gap = 0
+            chunks.append(np.zeros(int(val * sr), dtype=np.float32)); pos += int(val * sr)
+            continue
+        sents = sentences(' '.join(val.split()))
         for si, s in enumerate(sents):
             a, sr = synth(k, respell(s, m), voice, speed)
             # trim the model's own leading/trailing silence so our gaps are exact
             nz = np.where(np.abs(a) > 0.01)[0]
             if len(nz):
                 a = a[max(0, nz[0] - int(0.03 * sr)): nz[-1] + int(0.06 * sr)]
-            chunks.append(a)
-            last = pi == len(pars) - 1 and si == len(sents) - 1
+            chunks.append(a); last_gap = 0
+            stimes.append({'s': round(pos / sr, 3), 'e': round((pos + len(a)) / sr, 3), 'text': s})
+            pos += len(a)
+            last = ii == len(items) - 1 and si == len(sents) - 1
             if not last:
                 gap = PARA_GAP if si == len(sents) - 1 else SENT_GAP
-                chunks.append(np.zeros(int(gap * sr), dtype=a.dtype))
+                chunks.append(np.zeros(int(gap * sr), dtype=a.dtype)); pos += int(gap * sr); last_gap = int(gap * sr)
+    pars = [v for kd, v in items if kd == 'text']
     audio = np.concatenate(chunks)
     audio = audio / max(1e-6, np.abs(audio).max()) * 0.89
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     sf.write(out, audio, sr)
+    json.dump(stimes, open(os.path.splitext(out)[0] + '.sentences.json', 'w'), indent=1)
     mp3 = os.path.splitext(out)[0] + '.mp3'
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', out, '-b:a', '192k', mp3], check=True)
     print(f'{out}  {len(audio) / sr:.1f} s  voice={voice} speed={speed}  sentences={sum(len(sentences(" ".join(p.split()))) for p in pars)}')
