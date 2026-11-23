@@ -226,11 +226,22 @@ def main():
     vpath = os.path.join(P, 'voice-over', proj['voice'])
     # voice compression (default on, mix.voiceComp false to skip): evens out quiet syllables so the
     # narrator stays clear on phone speakers and over food/ASMR sounds (user note, 23 Nov 2026)
-    vaf = ['-af', 'highpass=f=70,acompressor=threshold=-24dB:ratio=3.5:attack=4:release=90:makeup=6dB:knee=4']
-    if not mixcfg.get('voiceComp', True):
-        vaf = []
+    # "narrator polish" (default on; mix.voicePolish false to skip): warmth (180 Hz up), less mud (380 Hz
+    # down), clearer words (3.2 kHz up), softer S sounds, even level, and a tiny room so the AI voice
+    # sounds like a studio narrator instead of dry and flat (user note, 23 Nov 2026)
+    polish = ('highpass=f=75,equalizer=f=180:t=q:w=0.9:g=2.5,equalizer=f=380:t=q:w=1.2:g=-2.5,'
+              'equalizer=f=3200:t=q:w=1.0:g=2,deesser=i=0.35,'
+              'acompressor=threshold=-24dB:ratio=3:attack=5:release=120:makeup=5dB:knee=4,'
+              'aecho=0.85:0.6:18|31:0.10|0.06')
+    comp = 'highpass=f=70,acompressor=threshold=-24dB:ratio=3.5:attack=4:release=90:makeup=6dB:knee=4'
+    chain = polish if mixcfg.get('voicePolish', True) else (comp if mixcfg.get('voiceComp', True) else '')
+    vaf = ['-af', 'aresample=48000,' + chain] if chain else []
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', vpath] + vaf + ['-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
     voice = np.frombuffer(raw, np.float32).astype(np.float64)
+    vdur = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', vpath],
+                                capture_output=True, text=True).stdout.strip() or 0)
+    if vdur:  # the polish's room tail must not make the audio longer than the voice-over (video length)
+        voice = voice[:int(round(vdur * SR))]
     dur = len(voice) / SR
     # voice level = RMS of speaking parts only
     sp = np.zeros(len(voice), bool)
