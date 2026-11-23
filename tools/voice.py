@@ -2,8 +2,8 @@
 """Free AI narrator (Kokoro, open-source, runs here; no ElevenLabs credits needed).
 
 usage:
-  python3 voice.py SCRIPT.txt OUT.wav [--voice am_michael] [--speed 1.0] [--pronounce FILE.json]
-  python3 voice.py --samples OUT_DIR "text to read" am_michael am_fenrir ...
+  python3 voice.py SCRIPT.txt OUT.wav [--voice af_heart] [--speed 1.0] [--pronounce FILE.json]
+  python3 voice.py --samples OUT_DIR "text to read" af_heart af_bella am_fenrir ...
   python3 voice.py --check            # install check + model download only
 
 How it reads the script:
@@ -31,7 +31,7 @@ CACHE = os.path.expanduser('~/.cache/pds-voice')
 REL = 'https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/'
 FILES = ['kokoro-v1.0.onnx', 'voices-v1.0.bin']
 SENT_GAP, PARA_GAP = 0.30, 0.45
-DEFAULT_VOICE = 'am_michael'
+DEFAULT_VOICE = 'af_heart'  # user rule, 23 Nov 2026
 
 
 def ensure():

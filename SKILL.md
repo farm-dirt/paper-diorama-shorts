@@ -335,15 +335,19 @@ the big reveal: music drops out → silence beat → reveal line → sting.
   user can check the story at a glance.
 **Voice-over: Claude makes it by default (user rule, 23 Nov 2026).** The engine's free narrator
 `tools/voice.py` (Kokoro, open-source, runs here, no credits) reads `script/script.txt` sentence by
-sentence with exact pauses, so timing.py snaps cleanly. Default voice **am_michael** (warm, calm male;
-user approved 23 Nov 2026), Speed 1.1 (≈ 2.8 words/s; 1.0 drags). Keep the same voice on every short.
+sentence with exact pauses, so timing.py snaps cleanly. **Narrator voice: always af_heart** ("heart", a
+soft, natural female narrator; user rule, 23 Nov 2026, replaces am_michael) at **Speed 1.0** (heart talks
+faster than michael, so 1.0 already gives about 2.8-3 words/s). Use it on every short; never switch voice
+unless the user asks. audio.py gives the voice a "narrator polish" automatically (warmth, clearer words,
+softer S sounds, even level, a tiny studio room; `mix.voicePolish`, on by default), so never add other
+effects to the voice file.
 - Hard names: add a respelling to `~/pds/tools/pronounce.json` (engine-wide, commit + push) or
   `project-files/pronounce.json` (one short); test with `voice.py --phonemes "Thaylees"` and read the
   phonemes before rendering ("Thales" alone comes out as one syllable, so it is mapped to "Thaylees").
 - Emotion comes from the writing only: "..." for a pause, a blank line between paragraphs, commas for
   breath. Kokoro is calmer than ElevenLabs and won't act a joke; timing and pictures carry the humour.
-- To try other voices: `voice.py --samples OUT_DIR "text" am_michael am_fenrir am_puck af_heart`, send
-  the MP3s, the user picks.
+- Only if the user asks to try other voices: `voice.py --samples OUT_DIR "text" af_heart af_bella am_fenrir am_onyx`,
+  send the MP3s, the user picks.
 - If the user prefers to record in ElevenLabs instead, use the ElevenLabs notes below and wait for the upload.
 
 **ElevenLabs (only when the user chooses to record; FREE plan, confirmed 15 Nov 2026):**
@@ -373,7 +377,7 @@ Never build animation before the voice-over exists. Then, without asking:
 ```bash
 python3 ~/pds/tools/new_project.py ~/shorts <slug> "<Title>"
 # default: Claude's free narrator
-python3 ~/pds/tools/voice.py ~/shorts/<slug>/script/script.txt ~/shorts/<slug>/voice-over/voice.wav --voice am_michael --speed 1.1
+python3 ~/pds/tools/voice.py ~/shorts/<slug>/script/script.txt ~/shorts/<slug>/voice-over/voice.wav --voice af_heart --speed 1.0
 # or, if the user recorded it: cp <upload> ~/shorts/<slug>/voice-over/voice.<ext>
 # set "voice" in project.json
 python3 ~/pds/tools/timing.py ~/shorts/<slug>/voice-over/voice.<ext> ~/shorts/<slug>/project-files/timing.json --script ~/shorts/<slug>/script/script.txt
