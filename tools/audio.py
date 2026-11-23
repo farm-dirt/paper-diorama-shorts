@@ -224,7 +224,12 @@ def main():
     tim = json.load(open(os.path.join(P, 'project-files', 'timing.json')))
     mixcfg = {'music': 0.08, 'musicPause': 0.14, 'sfx': 0.35}; mixcfg.update(proj.get('mix', {}))
     vpath = os.path.join(P, 'voice-over', proj['voice'])
-    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', vpath, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+    # voice compression (default on, mix.voiceComp false to skip): evens out quiet syllables so the
+    # narrator stays clear on phone speakers and over food/ASMR sounds (user note, 23 Nov 2026)
+    vaf = ['-af', 'highpass=f=70,acompressor=threshold=-24dB:ratio=3.5:attack=4:release=90:makeup=6dB:knee=4']
+    if not mixcfg.get('voiceComp', True):
+        vaf = []
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', vpath] + vaf + ['-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
     voice = np.frombuffer(raw, np.float32).astype(np.float64)
     dur = len(voice) / SR
     # voice level = RMS of speaking parts only
@@ -262,6 +267,10 @@ def main():
         name = cue['name']
         s = shape_cue(SFX[name](), cue); s = s / (np.abs(s).max() + 1e-9) * vpk * mixcfg['sfx'] * cue.get('gain', 1.0)
         i = int(cue['t'] * SR); fx[i:i + len(s)] += s[:max(0, len(fx) - i)]
+    # sound effects step back while the narrator talks (mix.sfxUnderVoice, default 0.6)
+    duck = np.where(sp, mixcfg.get('sfxUnderVoice', 0.6), 1.0)
+    k = int(0.08 * SR); duck = np.convolve(duck, np.ones(k) / k, mode='same')
+    fx *= duck
     # room tone ~ -34 dB under the voice: inaudible under speech, but pauses never go to dead air
     mix = voice + bed + fx + room_tone(len(voice), vr * mixcfg.get('roomTone', 0.02))
     os.makedirs(os.path.join(P, 'audio'), exist_ok=True)
@@ -270,10 +279,15 @@ def main():
     import wave
     with wave.open(tmp, 'wb') as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((pcm * 32767).astype(np.int16).tobytes())
-    # loudness: measure, one linear gain to -14 LUFS, then true-peak limiter
-    o = subprocess.run(['ffmpeg', '-hide_banner', '-i', tmp, '-af', 'ebur128', '-f', 'null', '-'], capture_output=True, text=True).stderr
+    # loudness: the TALKING parts are set to -14 LUFS (so loud sound-only moments can't pull the
+    # voice down), then a true-peak limiter catches the peaks
+    tmp2 = os.path.join(P, 'audio', 'mix_speech.wav')
+    with wave.open(tmp2, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((pcm[sp] * 32767).astype(np.int16).tobytes())
+    o = subprocess.run(['ffmpeg', '-hide_banner', '-i', tmp2 if sp.any() else tmp, '-af', 'ebur128', '-f', 'null', '-'], capture_output=True, text=True).stderr
+    os.remove(tmp2)
     I = float(re.findall(r'I:\s+(-?[\d.]+) LUFS', o)[-1])
-    gain = -14.0 - I
+    gain = -13.0 - I  # talking parts a touch above -14 so the whole video lands at about -14 LUFS
     out = os.path.join(P, 'audio', 'mix.wav')
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', tmp, '-af', f'volume={gain:.2f}dB,alimiter=limit=0.89:attack=3:release=50:level=disabled',
                     '-ar', '48000', '-ac', '2', out], check=True)
