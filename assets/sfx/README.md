@@ -12,6 +12,11 @@ All files: leading silence trimmed, mono 48 kHz, long ambiences cut to 60 s. Che
 - Comedy / UI: `falling_whistle`, `pop`
 - Action: `sword_clash`, `rocks`, `water_splash`, `thunder`, `door_creak`, `footsteps_gravel`
 - Creatures/body: `monster_growl`, `heartbeat`, `rooster_crow` (synthesized cartoon crow, 1.1 s)
+- Food & kitchen (synthesized by `tools/make_food_sfx.py`, Nov 2026, no licence needed - made by us):
+  `steam_hiss`, `sizzle`, `boil_bubbles` (ambiences: use `dur` + fades), `water_pour`, `rice_pour`,
+  `knife_chop`, `knife_chops`, `crunch`, `bite_soft`, `chew`, `slurp`, `spoon_scoop`, `lid_clink`,
+  `lid_rattle`, `stomach_growl`, `sneeze`. Re-run the script to rebuild them; real recordings with the
+  same names will replace them.
 - Ambience (quiet `gain` 0.3-0.5, use `dur` + fades): `wind_howl` (wind), `fire_crackle`, `night_ambience`, `horror_drone`
 
 **Removed (user rule, Nov 2026):** `wind` and `dark_click` were deleted: both were low rumbles that droned under scenes.
