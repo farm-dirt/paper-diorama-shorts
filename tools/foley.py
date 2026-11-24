@@ -15,6 +15,8 @@ Kinds: snow_step ice_step ice_creak ice_ping ice_crack thump_snow paper_unfold p
 door_swing breath_out drip icicle_chime lantern_click mitten_rub spoon_tap shatter bamboo_snap wobble
 scoop bite_soft sparkle_warm swoosh_dive fog_hiss gust whip iris_whoomp snow_plop
 bed_room bed_morning bed_river bed_woods bed_cave bed_glow
+wet_step bell_ring cable_hum rail_creak crust_crackle bread_tear mist_whoosh honey_pour lid_clink oven_crackle crumb_squeeze
+bed_fogwind bed_street bed_bakery bed_dawn
 """
 import json
 import os
@@ -411,6 +413,110 @@ class F:
         for f, a in [(196.0, 0.5), (293.7, 0.4), (392.0, 0.35), (587.3, 0.15)]:
             y += a * np.sin(2 * np.pi * f * t + self.r.uniform(0, 6)) * (0.8 + 0.2 * np.sin(2 * np.pi * self.r.uniform(0.1, 0.3) * t))
         return y * np.minimum(1, t / 1.0) * 0.4 + self._air(d, 400, 2500) * 0.1
+
+    # ---------- bakery / coastal town (added 24 Nov 2026 for fog-sourdough-boule)
+    def wet_step(self, p):
+        d = self.r.uniform(0.2, 0.3)
+        slap = self.band(self.n(0.1), 300, 2600) * self.env(int(0.1 * SR), 0.003, 0.03)
+        grit = self.grains(d, self.r.uniform(90, 160), 1200, 6000, 0.003, lambda u: (1 - u) ** 1.6)
+        out = np.zeros(len(grit))
+        self.put(out, grit * 0.5, 0.01)
+        self.put(out, slap * 1.8, 0.0)
+        return self.reverb(out, 0.3, 0.12)
+
+    def bell_ring(self, p):
+        out = np.zeros(int(2.4 * SR))
+        base = self.r.uniform(1050, 1250)
+        for i in range(p.get('n', 2)):
+            y = self.partials(base, [1, 2.4, 3.9, 5.6], 2.0, [0.9, 0.5, 0.3, 0.15], [1, 0.5, 0.3, 0.15])
+            self.put(out, y * 0.7, i * self.r.uniform(0.32, 0.45))
+        return self.reverb(out, 1.2, 0.3, 7000)
+
+    def cable_hum(self, p):
+        d = p.get('d', 1.2)
+        t = self.t(d)
+        ex = self.n(d)
+        y = self.reson(ex, [(self.r.uniform(520, 640), 1.0), (self.r.uniform(1300, 1500), 0.5)], q=25)
+        return y * np.sin(np.pi * t / d) ** 0.8 * 0.5
+
+    def rail_creak(self, p):
+        return self.ice_creak(p) * 0.6
+
+    def crust_crackle(self, p):
+        d = p.get('d', 1.0)
+        shape = lambda u: (1 - u) ** 0.9 * min(1, u * 14)
+        c = self.grains(d, p.get('rate', 140), 1500, 7500, 0.0025, shape)
+        tick = self.reson(self.band(self.n(d), 800, 6000) * self.env(int(d * SR), 0.002, d / 3), [(2400, 1.0), (4100, 0.6)], q=8)
+        out = c[:int(d * SR)] + 0.15 * tick
+        return self.reverb(out, 0.3, 0.1)
+
+    def bread_tear(self, p):
+        d = p.get('d', 0.9)
+        out = np.zeros(int(d * SR) + SR // 5)
+        self.put(out, self.crust_crackle({'d': d * 0.8, 'rate': 190}) * 0.9, 0)
+        rip = self.band(self.n(d), 500, 4200) * np.sin(np.pi * self.t(d) / d) ** 2
+        self.put(out, rip * 0.25, 0.05)
+        return self.reverb(out, 0.35, 0.12)
+
+    def mist_whoosh(self, p):
+        d = p.get('d', 1.4)
+        t = self.t(d)
+        y = self.band(self.n(d), 1500, 7000) * np.sin(np.pi * t / d) ** 1.4
+        return y * 0.5
+
+    def honey_pour(self, p):
+        d = p.get('d', 2.0)
+        t = self.t(d)
+        y = np.zeros(len(t))
+        rate = 14 + 6 * np.sin(2 * np.pi * 0.7 * t)
+        ph = np.cumsum(rate) / SR
+        pulses = (np.diff(np.floor(ph), prepend=0) > 0).astype(float)
+        y = self.reson(pulses * self.r.uniform(0.4, 1.0, len(t)), [(self.r.uniform(520, 700), 1.0), (self.r.uniform(1100, 1500), 0.5)], q=14)
+        y *= self.env(len(t), 0.25, d / 2.5, hold=d * 0.4)
+        return self.band(y, 220, 3800) * 0.5
+
+    def lid_clink(self, p):
+        out = np.zeros(int(1.2 * SR))
+        y = self.partials(self.r.uniform(900, 1100), [1, 1.7, 2.9, 4.1], 0.7, [0.18, 0.1, 0.06, 0.04], [1, 0.6, 0.3, 0.2])
+        self.put(out, y * 0.8, 0)
+        self.put(out, self.band(self.n(0.05), 1500, 6000) * self.env(int(0.05 * SR), 0.001, 0.012) * 0.4, 0)
+        return self.reverb(out, 0.5, 0.2)
+
+    def oven_crackle(self, p):
+        d = p.get('d', 2.0)
+        return self.grains(d, 22, 1800, 7000, 0.006, lambda u: 0.6 + 0.4 * np.sin(u * 20)) * 0.5
+
+    def crumb_squeeze(self, p):
+        d = 0.5
+        y = self.grains(d, 90, 900, 3800, 0.005, lambda u: np.sin(np.pi * u))
+        return self.reverb(y * 0.7, 0.2, 0.08)
+
+    def bed_fogwind(self, p):
+        d = p.get('d', 6.0)
+        t = self.t(d)
+        y = self._air(d, 450, 2200) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.17 * t + 1.0))
+        return y * 0.4
+
+    def bed_street(self, p):
+        d = p.get('d', 6.0)
+        out = self._air(d, 500, 2600) * 0.2
+        for _ in range(int(d * 0.5)):
+            self.put(out, self.partials(self.r.uniform(1400, 1900), [1, 2.7], 0.5, [0.3, 0.15]) * 0.12, self.r.uniform(0, d - 0.6))
+        return self.reverb(out, 1.0, 0.3, 5000)[:len(out)]
+
+    def bed_bakery(self, p):
+        d = p.get('d', 6.0)
+        out = self._air(d, 350, 1800) * 0.12
+        self.put(out, np.zeros(1), 0)
+        return out + self.oven_crackle({'d': d})[:len(out)] * 0.35
+
+    def bed_dawn(self, p):
+        d = p.get('d', 6.0)
+        t = self.t(d)
+        y = self._air(d, 900, 3800) * 0.12
+        for _ in range(int(d * 0.8)):
+            self.put(y, self.chirp(self.r.uniform(2200, 3200), self.r.uniform(3200, 4200), 0.12, 0.03) * 0.2, self.r.uniform(0, d - 0.3))
+        return y
 
 
 def write_wav(path, x):
