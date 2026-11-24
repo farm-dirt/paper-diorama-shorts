@@ -102,12 +102,12 @@ def blend(A, B, u, spec, t, k=1.0):
         yy, xx = np.ogrid[:h, :w]
         R = math.hypot(max(px, w - px), max(py, h - py)) * 1.05
         if u < 0.5:
-            rr = R * (1 - _sm(u / 0.5)) ** 1.2
+            rr = max(46 * k, R * (1 - _sm(u / 0.5)) ** 1.2)  # never fully black: a small window stays open
             dist = np.sqrt((xx - px) ** 2 + (yy - py) ** 2)
             m = np.clip((rr - dist) / (60 * k) + 0.5, 0, 1).astype(np.float32)
             out = Af * m[..., None]
         else:
-            rr = R * _sm((u - 0.5) / 0.5) ** 1.2
+            rr = max(46 * k, R * _sm((u - 0.5) / 0.5) ** 1.2)
             cx, cy = w / 2, h * 0.45
             dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
             m = np.clip((rr - dist) / (90 * k) + 0.5, 0, 1).astype(np.float32)
