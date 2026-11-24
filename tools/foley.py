@@ -17,6 +17,7 @@ scoop bite_soft sparkle_warm swoosh_dive fog_hiss gust whip iris_whoomp snow_plo
 bed_room bed_morning bed_river bed_woods bed_cave bed_glow
 wet_step bell_ring cable_hum rail_creak crust_crackle bread_tear mist_whoosh honey_pour lid_clink oven_crackle crumb_squeeze
 bed_fogwind bed_street bed_bakery bed_dawn
+knife_saw flour_pour glass_clink lid_screw bubble_pop dough_pat
 """
 import json
 import os
@@ -490,6 +491,54 @@ class F:
         d = 0.5
         y = self.grains(d, 90, 900, 3800, 0.005, lambda u: np.sin(np.pi * u))
         return self.reverb(y * 0.7, 0.2, 0.08)
+
+    def knife_saw(self, p):
+        """Bread knife sawing through crust: n back-and-forth strokes, each a rough scrape with a crackle."""
+        d = p.get('d', 2.0)
+        n = int(p.get('n', 6))
+        out = np.zeros(int(d * SR) + SR // 4)
+        for i in range(n):
+            sd = d / n * 0.92
+            t = self.t(sd)
+            sc = self.band(self.n(sd), 700, 5200) * np.sin(np.pi * t / sd) ** 0.7
+            sc *= 0.7 + 0.3 * np.sin(2 * np.pi * 40 * t)
+            self.put(out, sc * 0.45, i * d / n)
+            self.put(out, self.grains(sd, 120, 1800, 6500, 0.002, lambda u: np.sin(np.pi * u)) * 0.5, i * d / n)
+        return self.reverb(out, 0.25, 0.08)
+
+    def flour_pour(self, p):
+        d = p.get('d', 1.8)
+        t = self.t(d)
+        y = self.band(self.n(d), 2500, 9000) * self.env(len(t), 0.15, d / 3, hold=d * 0.5)
+        y *= 0.75 + 0.25 * np.sin(2 * np.pi * 9 * t + 1.3)
+        return y * 0.34
+
+    def glass_clink(self, p):
+        out = np.zeros(int(1.0 * SR))
+        y = self.partials(self.r.uniform(2300, 2800), [1, 2.3, 3.9], 0.5, [0.1, 0.06, 0.04], [1, 0.45, 0.25])
+        self.put(out, y * 0.5, 0)
+        return self.reverb(out, 0.3, 0.12)
+
+    def lid_screw(self, p):
+        d = p.get('d', 0.6)
+        out = np.zeros(int(d * SR) + SR // 8)
+        for i in range(5):
+            self.put(out, self.band(self.n(0.04), 1200, 5000) * self.env(int(0.04 * SR), 0.002, 0.012) * 0.5, i * d / 5)
+        sq = self.chirp(1800, 2600, d * 0.7, 3.0) * 0.12
+        self.put(out, sq, 0.02)
+        return out
+
+    def bubble_pop(self, p):
+        d = 0.12
+        y = self.chirp(self.r.uniform(500, 800), self.r.uniform(1200, 1800), d, 22) * 0.6
+        return self.reverb(y, 0.2, 0.08)
+
+    def dough_pat(self, p):
+        d = 0.35
+        t = self.t(d)
+        y = np.sin(2 * np.pi * (110 - 50 * t / d) * t) * np.exp(-t * 16) * 0.8
+        y += self.band(self.n(d), 300, 1800) * np.exp(-t * 30) * 0.3
+        return self.reverb(y, 0.2, 0.06)
 
     def bed_fogwind(self, p):
         d = p.get('d', 6.0)
