@@ -31,14 +31,14 @@ def main():
         spec = importlib.util.spec_from_file_location('custom', cp)
         mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
         if hasattr(mod, 'register'):
-            mod.register(CAST, {}, DR.POSES, SETS.SETS)
+            mod.register(CAST, {}, DR.POSES, SETS)  # same as director: the sets module
     rigs = {k: f() for k, f in CAST.items()}
     capY = proj.get('captionY', 420)
     for i, s in enumerate(sc, 1):
         L = s['end'] - s['start']
         if i > 1 and abs(s['start'] - sc[i - 2]['end']) > 0.01: probs.append(f'scene {i}: gap/overlap with scene {i-1}')
         if L < 1.0: probs.append(f'scene {i}: only {L:.2f} s (min ~1.2 s unless it is a deliberate flash cut)')
-        if L > 4.0: probs.append(f'scene {i}: {L:.2f} s long - split it or add a camera move/key every 1.5 s')
+        if L > 4.0 and not (s.get('ev') or s.get('walk') or s.get('camKeys')): probs.append(f'scene {i}: {L:.2f} s long - split it or add a camera move/key every 1.5 s')
         if not s.get('desc'): probs.append(f'scene {i}: add "desc" (what happens + why this camera)')
         if s['set'] not in SETS.SETS: probs.append(f'scene {i}: unknown set {s["set"]} (have {list(SETS.SETS)})'); continue
         if s.get('variant') and s['variant'] not in SETS.VARIANTS[s['set']]:
@@ -76,7 +76,9 @@ def main():
                     probs.append(f'scene {i}: {a["who"]} holds one pose for {L:.1f} s - add a key (reaction)')
     if not proj.get('hook'): probs.append('add "hook": {"text": "2-4 words", "s": 0, "e": 2}')
     cta = proj.get('cta')
-    if not cta:
+    if not cta and proj.get('voice') is None:
+        pass  # sound-only ASMR journey shorts have no subscribe button (user removed it, 24 Nov 2026)
+    elif not cta:
         probs.append('no subscribe CTA: add "cta": {"s": S, "e": S + 2.6, "tap": 0.95} at 45-60 % of the video')
     else:
         if cta['s'] < 3 or cta['e'] > dur - 3: probs.append('cta must not be in the first or last 3 s')

@@ -995,8 +995,11 @@ def register(CAST, rigs, POSES, SETS):
                                ('ice_river', build_river, ['day']), ('snow_woods', build_woods, ['day']),
                                ('cave_mouth', build_cave_mouth, ['day']), ('ice_wall', build_ice_wall, ['day']),
                                ('bamboo_close', build_bamboo, ['day'])]:
-        SETS.SETS[name] = fn
-        SETS.VARIANTS[name] = variants
+        if isinstance(SETS, dict):   # lint.py passes the sets table itself
+            SETS[name] = fn
+        else:                        # director passes the sets module
+            SETS.SETS[name] = fn
+            SETS.VARIANTS[name] = variants
 
 
 DRAW = {'trip_map': draw_map, 'snow_village': draw_village, 'ice_river': draw_river, 'snow_woods': draw_woods,
