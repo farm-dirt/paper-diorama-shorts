@@ -110,3 +110,19 @@ strange trait made huge, 3-5 colours, no outlines. Static creature layers can pa
 - **Shorts safe box** (lint checks it): faces inside x 48-888 and y 180-1500; no faces in the caution
   strip y 1250-1500. Every short needs a `cta` at 45-60 % (lint fails without one). Never cue `wind`
   or `dark_click` (deleted; audio.py and lint refuse them).
+
+## Travel, transitions and POV (added 24 Nov 2026 — every short uses these)
+Why: the user found shorts that only hard-cut between pictures in one place feel like a slideshow with no story.
+Every short is now a small **journey**: the viewer must always know where we are, where we came from and where
+we're going (a map, a sign, a trail, a destination visible in the distance), even with no narration.
+- `"tin": {"type": "dive|fog|gust|dark|whip|flash|cut", "dur": 0.6, "at": [x, y]}` on a scene = how we ENTER it
+  (engine/transitions.py). Pick the one the picture causes: `dive` into a point (map icon, window, eye), `fog` (breath,
+  mist, steam, time passing), `gust` (wind, snow, petals), `dark` (iris into a cave/door/shadow, `at` = where it
+  closes), `whip` (sudden "look!"), `flash` (a crack, a bite, magic). Never two of the same type in a row.
+- `"walk": {"s", "e", "rate", "amp"}` (or a list of them) = first-person walking: the camera dips on each step and
+  sways. Footsteps land at `s + k / rate` (k = 1, 2, …): cue a footstep sound on each one.
+- `"camKeys": [{"s", "e", "by": [dx, dy, dzoom], "ease"}]` = extra camera moves inside a shot (look up, hop, lean in).
+- custom.py may define `pov(scene, S, t, ctx)`: screen-space layer for the viewer's own hands/held props/breath. It
+  only bobs with the walk, so hands stay put while the world moves. `ctx["cam"]` gives the camera to aim at world points.
+- Event times for a short live in `scene["ev"]` (written by a `make_project.py` beside project.json), so pictures
+  and sound cues come from ONE timeline.

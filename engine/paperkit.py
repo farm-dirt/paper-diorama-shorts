@@ -351,6 +351,31 @@ class Scene:
         return out
 
 
+    def render_rgba(self, focus=2.0, dof=0.0, shadow=0.42, shadow_len=10.0, cam=(0, 0, 1.0), near_mult=4.0):
+        """Like render(), but on a transparent sheet: returns (premultiplied rgb, alpha)."""
+        out = np.zeros((self.ph, self.pw, 3), np.float32)
+        al = np.zeros((self.ph, self.pw), np.float32)
+        px, py, zoom = cam
+        cx, cy = self.pw / 2, self.ph / 2
+        for it in sorted(self.items, key=lambda d: -d['z']):
+            RGBA, Sh, pad, bx, by = _prepare(it, focus, dof, near_mult, shadow_len)
+            z = max(it['z'], 0.25)
+            par = 2.0 / z
+            zz = 1 + (zoom - 1) * par
+            ox = zz * (it['x'] * K + bx) + (1 - zz) * cx - px * par * K
+            oy = zz * (it['y'] * K + by) + (1 - zz) * cy - py * par * K
+            if Sh is not None:
+                M2 = np.float32([[zz, 0, ox - zz * pad], [0, zz, oy - zz * pad]])
+                S = cv2.warpAffine(Sh, M2, (self.pw, self.ph), flags=cv2.INTER_LINEAR)
+                out *= (1 - shadow * S)[..., None]
+                al = al + (1 - al) * shadow * S * 0.6
+            M = np.float32([[zz, 0, ox], [0, zz, oy]])
+            W = cv2.warpAffine(RGBA, M, (self.pw, self.ph), flags=cv2.INTER_LINEAR)
+            out = W[..., :3] + out * (1 - W[..., 3:4])
+            al = W[..., 3] + al * (1 - W[..., 3])
+        return out, al
+
+
 # ------------------------------------------------------------ grade
 _GRADE = {}
 
@@ -360,6 +385,10 @@ LIGHTS = {  # time-of-day looks: (multiply tint, lift, warmth)
     'night': ((0.66, 0.72, 0.98), 0.00, -0.03),
     'lamp': ((1.00, 0.90, 0.78), 0.00, 0.05),
     'storm': ((0.62, 0.66, 0.74), 0.00, -0.02),
+    'dawn': ((1.02, 0.97, 0.96), 0.01, 0.03),     # pink-gold winter sunrise
+    'snow': ((0.97, 1.00, 1.05), 0.02, -0.02),    # bright cold daylight on snow
+    'ice': ((0.82, 0.92, 1.06), 0.00, -0.04),     # blue cave light
+    'warm': ((1.04, 0.97, 0.90), 0.01, 0.05),     # cosy lamp / a warm glow
 }
 
 

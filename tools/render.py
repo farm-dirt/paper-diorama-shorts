@@ -78,7 +78,7 @@ def main():
     joined = os.path.join(tmp, 'joined.mp4')
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', joined], check=True)
     mixp = os.path.join(pdir, 'audio', 'mix.wav')
-    voice = os.path.join(pdir, 'voice-over', proj.get('voice', 'voice.mp3'))
+    voice = os.path.join(pdir, 'voice-over', proj.get('voice') or 'voice.mp3')
     audio = mixp if os.path.exists(mixp) else (voice if os.path.exists(voice) else None)
     if audio and '--noaudio' not in a:
         subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', joined, '-ss', f'{t_from:.3f}', '-t', f'{t_to - t_from:.3f}',

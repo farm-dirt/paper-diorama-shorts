@@ -15,6 +15,7 @@ import paperkit
 from paperkit import Scene, Layer, grade
 from cast import CAST, _apply
 import sets as SETS
+import transitions
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FONT = os.path.join(ROOT, 'assets', 'Fraunces-Black.woff')
@@ -228,6 +229,29 @@ class Director:
     # -------------------------------------------------------- frame
     def frame(self, t, fi=0):
         si, sc = self.scene_at(t)
+        out = self.render_scene(si, sc, t, fi)
+        tin = sc.get('tin')
+        if tin and si > 0 and tin.get('type', 'cut') != 'cut':
+            u = (t - sc['start']) / max(0.05, tin.get('dur', 0.6))
+            if 0 <= u < 1:
+                A = self.render_scene(si - 1, self.proj['scenes'][si - 1], t, fi)
+                out = transitions.blend(A, out, u, tin, t, paperkit.K)
+        return self.overlay(out, t)
+
+    def walk_bob(self, sc, t):
+        """POV walking: the camera dips on every footstep and sways side to side.
+        scene "walk": {"s": S, "e": E, "rate": steps per second, "amp": px}. Steps land at s + k/rate."""
+        wk = sc.get('walk')
+        if isinstance(wk, list):  # several walks in one shot
+            wk = next((w for w in wk if w['s'] <= t < w['e']), None)
+        if not wk or not (wk['s'] <= t < wk['e']):
+            return 0.0, 0.0
+        ph = math.pi * wk.get('rate', 1.8) * (t - wk['s'])
+        fade = min(1.0, (t - wk['s']) / 0.25, (wk['e'] - t) / 0.25)
+        amp = wk.get('amp', 16) * fade
+        return amp * 0.45 * math.sin(ph), amp * (0.5 - abs(math.sin(ph)))
+
+    def render_scene(self, si, sc, t, fi=0):
         set_ = SETS.get_set(sc['set'], sc.get('variant'))
         S = Scene(1080, 1920)
         for it in set_['items']:
@@ -256,7 +280,7 @@ class Director:
                 lx, ly = _apply(W_['lantern'], [(0, 92)])[0] + [ox, oy]
                 glows.append((lx, ly, 150, '#FF8A3D', 0.30))
         if self.custom and hasattr(self.custom, 'draw'):
-            more = self.custom.draw(sc, S, t, dict(set=set_, locs=locs, scene_index=si))
+            more = self.custom.draw(sc, S, t, dict(set=set_, locs=locs, scene_index=si))  # cam not known yet here
             if more:
                 glows += more
         # camera
@@ -265,6 +289,14 @@ class Director:
         c0 = cam.get('from', [0, 0, 1.0])
         c1 = cam.get('to', c0)
         cx, cy, cz = [lerp(c0[i], c1[i], u) for i in range(3)]
+        bx_, by_ = self.walk_bob(sc, t)
+        cx += bx_
+        cy += by_
+        for ck in sc.get('camKeys', []):  # extra camera moves inside a shot: {"s","e","by":[dx,dy,dz],"ease"}
+            uu = ease((t - ck['s']) / max(0.01, ck['e'] - ck['s']), ck.get('ease', 'inOut')) if t >= ck['s'] else 0.0
+            cx += ck['by'][0] * uu
+            cy += ck['by'][1] * uu
+            cz += ck['by'][2] * uu
         sh = sc.get('shake')
         if sh and sh['t'] <= t < sh['t'] + sh.get('dur', 0.4):
             k = 1 - (t - sh['t']) / sh.get('dur', 0.4)
@@ -276,6 +308,20 @@ class Director:
         if rk and t >= rk['t']:
             focus = lerp(focus, rk['to'], ease((t - rk['t']) / rk.get('dur', 0.5)))
         img = S.render(focus=focus, dof=sc.get('dof', self.proj.get('dof', 0.3)), cam=(cx, cy, cz))
+        # POV layer (the viewer's own hands, breath, things held): drawn in screen space, it only bobs
+        # with the walk, so hands stay put while the world moves past (custom.pov(scene, S, t, ctx))
+        if self.custom and hasattr(self.custom, 'pov'):
+            S2 = Scene(1080, 1920)
+            more = self.custom.pov(sc, S2, t, dict(set=set_, scene_index=si, bob=(bx_, by_), cam=(cx, cy, cz)))
+            if S2.items:
+                rgb, a = S2.render_rgba(focus=2.0, dof=0.0, cam=(-bx_ * 0.5, -by_ * 0.8, 1.0))
+                img = rgb + img * (1 - a[..., None])
+            if more:
+                povg = list(more)
+            else:
+                povg = []
+        else:
+            povg = []
         fl = 0.0
         f_ = sc.get('flash')
         if f_ and f_['t'] <= t < f_['t'] + f_.get('dur', 0.2):
@@ -284,11 +330,10 @@ class Director:
         par = 1.0
         zz = 1 + (cz - 1) * par
         glows = [(zz * gx + (1 - zz) * 540 - cx * par, zz * gy + (1 - zz) * 960 - cy * par, r * zz, c, a)
-                 for (gx, gy, r, c, a) in glows]
+                 for (gx, gy, r, c, a) in glows] + povg
         out = grade(img, glows=glows, light=sc.get('light', set_['light']), frame=fi,
                     flash=fl, flash_color=(f_ or {}).get('color', '#FFFFFF'),
                     letterbox=sc.get('letterbox', 0))
-        out = self.overlay(out, t)
         return out
 
     # -------------------------------------------------------- captions, hook, CTA

@@ -369,6 +369,9 @@ def get_set(name, variant=None):
     variant = variant or VARIANTS[name][0]
     key = (name, variant, paperkit.K)
     if key not in _CACHE:
-        _CACHE.clear()  # one set in memory at a time keeps RAM low
+        while len(_CACHE) >= 3:  # keep at most 3 sets (a transition shows two at once); keeps RAM low
+            _CACHE.pop(next(iter(_CACHE)))
         _CACHE[key] = SETS[name](variant)
+    else:
+        _CACHE[key] = _CACHE.pop(key)  # most recently used goes last
     return _CACHE[key]

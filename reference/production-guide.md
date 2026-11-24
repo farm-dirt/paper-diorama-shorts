@@ -56,3 +56,13 @@ nothing cut off, no empty frames.
 ```
 `project-files/`: project.json, timing.json, custom.py (optional). Copy the whole folder to the
 user's connected computer folder at the end.
+
+## New sounds for every short (user rule, 24 Nov 2026)
+The user heard the same library sounds (fire crackle, steam hiss, sparkle) in every short. So each short gets its
+OWN foley, made by `tools/foley.py` from a `"foley"` block in project.json (seeded by slug + name, so takes differ
+every short) into `project-files/sfx/`, which audio.py loads before the shared library. Rules:
+- one sound per visible action, on its exact frame; footsteps on every walk step (vary 3-4 takes);
+- a different quiet bed per place (`bed_*` kinds), crossfading ~0.5 s across each transition;
+- every transition has its own sound (dive = rising swoosh, fog = breath hiss, gust = blown snow, dark = soft whoomp);
+- no low rumbles: beds are high-passed at 150 Hz; sound-only shorts (`"voice": null`) are mixed to -14 LUFS.
+Use the shared assets/sfx library only when foley.py has no kind for the action (then add a kind next time).

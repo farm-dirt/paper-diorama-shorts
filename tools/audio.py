@@ -218,10 +218,23 @@ def room_tone(n, level):
     return w / rms(w) * level
 
 
+def load_project_sfx(P):
+    """This short's own sounds (made by foley.py) win over the shared library."""
+    d = os.path.join(P, 'project-files', 'sfx')
+    if os.path.isdir(d):
+        for fn in sorted(os.listdir(d)):
+            stem, ext = os.path.splitext(fn)
+            if ext.lower() in ('.wav', '.mp3', '.flac', '.ogg'):
+                SFX[stem] = (lambda p=os.path.join(d, fn): load_audio(p))
+
+
 def main():
     P = sys.argv[1]
     proj = json.load(open(os.path.join(P, 'project-files', 'project.json')))
     tim = json.load(open(os.path.join(P, 'project-files', 'timing.json')))
+    load_project_sfx(P)
+    if not proj.get('voice'):
+        return main_sound_only(P, proj, tim)
     mixcfg = {'music': 0.08, 'musicPause': 0.14, 'sfx': 0.35}; mixcfg.update(proj.get('mix', {}))
     vpath = os.path.join(P, 'voice-over', proj['voice'])
     # voice compression (default on, mix.voiceComp false to skip): evens out quiet syllables so the
@@ -305,6 +318,47 @@ def main():
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', out, '-b:a', '160k', os.path.join(P, 'audio', 'mix.mp3')], check=True)
     os.remove(tmp)
     print(f'mix ok  dur={dur:.2f}s  measured {I:.1f} LUFS -> gain {gain:+.1f} dB  sfx={len(proj.get("sfx", []))}')
+
+
+def main_sound_only(P, proj, tim):
+    """No narrator (pure ASMR shorts): only the cued sounds, mixed and set to -14 LUFS.
+    Cue gains are relative: each cue is peak-normalised, then x gain. Beds: gain 0.1-0.3."""
+    dur = tim.get('dur') or proj['scenes'][-1]['end']
+    n = int(round(dur * SR))
+    fx = np.zeros(n)
+    bad = [c['name'] for c in proj.get('sfx', []) if c['name'] in BANNED]
+    if bad:
+        sys.exit('!! banned sound(s) in project.json (user rule): %s' % ', '.join(sorted(set(bad))))
+    unknown = sorted({c['name'] for c in proj.get('sfx', []) if c['name'] not in SFX})
+    if unknown:
+        sys.exit('!! unknown sfx: %s' % ', '.join(unknown))
+    cache = {}
+    for cue in proj.get('sfx', []):
+        name = cue['name']
+        if name not in cache:
+            cache[name] = SFX[name]()
+        s = shape_cue(cache[name], cue)
+        s = s / (np.abs(s).max() + 1e-9) * 0.5 * cue.get('gain', 1.0)
+        i = int(cue['t'] * SR)
+        if i < 0:
+            s, i = s[-i:], 0
+        fx[i:i + len(s)] += s[:max(0, n - i)]
+    mix = fx + room_tone(n, 0.0015)
+    os.makedirs(os.path.join(P, 'audio'), exist_ok=True)
+    tmp = os.path.join(P, 'audio', 'mix_raw.wav')
+    pcm = np.clip(mix / max(1.0, np.abs(mix).max()), -1, 1)
+    import wave
+    with wave.open(tmp, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((pcm * 32767).astype(np.int16).tobytes())
+    o = subprocess.run(['ffmpeg', '-hide_banner', '-i', tmp, '-af', 'ebur128', '-f', 'null', '-'], capture_output=True, text=True).stderr
+    I = float(re.findall(r'I:\s+(-?[\d.]+) LUFS', o)[-1])
+    gain = -14.0 - I
+    out = os.path.join(P, 'audio', 'mix.wav')
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', tmp, '-af', f'volume={gain:.2f}dB,alimiter=limit=0.89:attack=3:release=50:level=disabled',
+                    '-ar', '48000', '-ac', '2', out], check=True)
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', out, '-b:a', '160k', os.path.join(P, 'audio', 'mix.mp3')], check=True)
+    os.remove(tmp)
+    print(f'mix ok (sound only)  dur={dur:.2f}s  measured {I:.1f} LUFS -> gain {gain:+.1f} dB  cues={len(proj.get("sfx", []))}')
 
 
 if __name__ == '__main__':
