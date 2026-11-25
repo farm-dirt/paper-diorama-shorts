@@ -18,6 +18,8 @@ bed_room bed_morning bed_river bed_woods bed_cave bed_glow
 wet_step bell_ring cable_hum rail_creak crust_crackle bread_tear mist_whoosh honey_pour lid_clink oven_crackle crumb_squeeze
 bed_fogwind bed_street bed_bakery bed_dawn
 knife_saw flour_pour glass_clink lid_screw bubble_pop dough_pat
+hive_hum glass_snap sticky_stretch slurp chew ember_pop bed_ember bed_hivecave bed_pinewind
+ash_step ash_puff compass_tick rope_creak rope_grab pebble_clatter lava_plop glass_creak glass_crack wax_squelch bed_ashwind bed_lavacliff bed_craterrim
 """
 import json
 import os
@@ -566,6 +568,203 @@ class F:
         for _ in range(int(d * 0.8)):
             self.put(y, self.chirp(self.r.uniform(2200, 3200), self.r.uniform(3200, 4200), 0.12, 0.03) * 0.2, self.r.uniform(0, d - 0.3))
         return y
+
+
+    # ---------- honeycomb / hive (added 25 Nov 2026 for cinder-honeycomb)
+    def hive_hum(self, p):
+        """A warm tonal hum with a slow wobble; the comb's impossible trait. Rises when p['rise']."""
+        d = p.get('d', 1.5)
+        t = self.t(d)
+        f0 = p.get('f', self.r.uniform(236, 262))
+        wob = 1 + 0.012 * np.sin(2 * np.pi * self.r.uniform(5, 7) * t)
+        y = np.zeros(len(t))
+        for k, a in [(1, 0.5), (2, 0.45), (3, 0.25), (4.02, 0.12), (5.97, 0.06)]:
+            y += a * np.sin(2 * np.pi * np.cumsum(f0 * k * wob * (1 + p.get('rise', 0.0) * t / d)) / SR + self.r.uniform(0, 6))
+        trem = 0.8 + 0.2 * np.sin(2 * np.pi * 9 * t)
+        return y * trem * np.minimum(1, t / 0.08) * np.minimum(1, (d - t) / 0.2)
+
+    def glass_snap(self, p):
+        out = np.zeros(int(1.4 * SR))
+        self.put(out, self.band(self.n(0.012), 2500, 12000) * self.env(int(0.012 * SR), 0.0002, 0.002) * 2.2, 0)
+        for i in range(5):
+            self.put(out, self.partials(self.r.uniform(2800, 5200), [1, 1.51, 2.32], 0.5, [0.12, 0.08, 0.05]) * self.r.uniform(0.2, 0.5), 0.003 + i * 0.012)
+        self.put(out, self.grains(0.18, 400, 2500, 9000, 0.003, lambda u: (1 - u)), 0.01)
+        return self.reverb(out, 0.8, 0.22, 9000)
+
+    def sticky_stretch(self, p):
+        """Thin amber thread pulled long: a rising creaky squeal with tiny sticky ticks."""
+        d = p.get('d', 1.4)
+        t = self.t(d)
+        f = 520 + 1100 * (t / d) ** 1.4
+        y = np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.15
+        y += self.band(self.n(d), 1500, 6000) * 0.12 * (0.5 + 0.5 * np.sin(2 * np.pi * 23 * t))
+        y += self.grains(d, 40, 900, 4000, 0.004)[:len(t)] * 0.35
+        return y * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 0.7
+
+    def slurp(self, p):
+        d = p.get('d', 0.9)
+        t = self.t(d)
+        f = 420 + 1500 * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 2
+        y = self.reson(self.band(self.n(d), 300, 4000), [(900, 1.0), (1800, 0.6)], q=7)
+        y *= 0.7 + 0.3 * np.sin(2 * np.pi * np.cumsum(f) / SR / 6)
+        y += self.grains(d, 140, 1200, 5000, 0.003, lambda u: np.sin(np.pi * u))[:len(t)] * 0.35
+        return y * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 0.9
+
+    def chew(self, p):
+        out = np.zeros(int(1.1 * SR))
+        for i in range(3):
+            g = self.reson(self.band(self.n(0.18), 150, 2200), [(420, 1), (800, 0.6)], q=4)
+            g *= self.env(len(g), 0.02, 0.05)
+            self.put(out, g * 0.7, i * 0.33)
+            self.put(out, self.grains(0.1, 160, 800, 3500, 0.004), i * 0.33 + 0.02)
+        return out
+
+    def ember_pop(self, p):
+        out = np.zeros(int(0.9 * SR))
+        for i in range(p.get('n', 5)):
+            self.put(out, self.band(self.n(0.012), 2000, 9000) * self.env(int(0.012 * SR), 0.0002, 0.003) * self.r.uniform(0.4, 1.0), i * self.r.uniform(0.02, 0.07))
+        self.put(out, self.partials(self.r.uniform(2000, 2600), [1, 2.76], 0.5, [0.15, 0.08]) * 0.2, 0.01)
+        return self.reverb(out, 0.4, 0.15, 8000)
+
+    def bed_ember(self, p):
+        d = p.get('d', 6.0)
+        out = self._air(d, 900, 4500) * 0.12
+        out += self.grains(d, 24, 1800, 8000, 0.006, lambda u: 0.6 + 0.4 * np.sin(u * 37))[:len(out)] * 0.5
+        t = self.t(d)
+        out += (np.sin(2 * np.pi * 262 * t) * 0.05 + np.sin(2 * np.pi * 392 * t) * 0.03) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.2 * t))
+        return out
+
+    def bed_hivecave(self, p):
+        d = p.get('d', 8.0)
+        t = self.t(d)
+        out = self._air(d, 200, 1600) * 0.22
+        rise = np.linspace(0.6, 1.4, len(t))
+        for f, a in [(247.0, 0.12), (370.0, 0.09), (494.0, 0.06)]:
+            out += a * np.sin(2 * np.pi * f * t + self.r.uniform(0, 6)) * (0.85 + 0.15 * np.sin(2 * np.pi * 7 * t)) * rise
+        for i in range(int(d * 0.8)):
+            self.put(out, self.chirp(self.r.uniform(1200, 1800), self.r.uniform(2200, 3000), 0.08, 0.02) * 0.2, self.r.uniform(0, d - 0.3))
+        return self.reverb(out, 1.6, 0.4, 5000)[:len(out)]
+
+    def bed_pinewind(self, p):
+        d = p.get('d', 8.0)
+        out = self._air(d, 500, 3200) * 0.35
+        out += self.grains(d, 18, 3500, 9500, 0.002)[:len(out)] * 0.12
+        return out
+
+    # ---------- volcano trip (Cinder Honeycomb v2)
+    def ash_step(self, p):
+        """A boot sinking into deep dry ash: soft powdery crunch, no ring."""
+        d = self.r.uniform(0.28, 0.4)
+        crunch = self.grains(d, self.r.uniform(160, 240), 500, 3200, 0.006, lambda u: (1 - u) ** 1.1 * min(1, u * 10))
+        thud = self.band(self.n(0.14), 140, 600) * self.env(int(0.14 * SR), 0.006, 0.05)
+        out = np.zeros(len(crunch))
+        self.put(out, crunch * 0.7, 0.01)
+        self.put(out, thud * 1.8, 0.0)
+        return self.reverb(out, 0.2, 0.05)
+
+    def ash_puff(self, p):
+        d = p.get('d', 0.6)
+        x = self.band(self.n(d), 700, 3500) * self.env(int(d * SR), 0.02, 0.18)
+        x += self.grains(d, 220, 900, 4000, 0.004, lambda u: (1 - u) ** 1.5)[:len(x)] * 0.35
+        return x
+
+    def compass_tick(self, p):
+        """Tiny brass ticks of a needle swinging, then a soft settling ping."""
+        n = p.get('n', 9)
+        out = np.zeros(int((0.2 + n * 0.11) * SR))
+        for i in range(n):
+            at = sum(0.07 + 0.012 * j for j in range(i))
+            self.put(out, self.partials(self.r.uniform(3000, 3600), [1, 2.4], 0.05, [0.01, 0.006]) * 0.5, at)
+        self.put(out, self.partials(1760, [1, 2.01, 3.0], 0.9, [0.4, 0.2, 0.1]) * 0.35, 0.1 + n * 0.1)
+        return self.reverb(out, 0.5, 0.15, 8000)
+
+    def rope_creak(self, p):
+        d = self.r.uniform(0.45, 0.7)
+        t = self.t(d)
+        rate = 22 + 40 * np.sin(np.pi * t / d)
+        ph = np.cumsum(rate) / SR
+        pulses = (np.diff(np.floor(ph), prepend=0) > 0).astype(float)
+        ex = pulses * self.r.uniform(0.5, 1.0, len(t)) + 0.04 * self.r.standard_normal(len(t))
+        y = self.reson(ex, [(self.r.uniform(210, 260), 1.0), (self.r.uniform(520, 640), 0.6), (1300, 0.2)], q=9)
+        return self.band(y * np.sin(np.pi * t / d) ** 0.8, 160, 3500)
+
+    def rope_grab(self, p):
+        out = np.zeros(int(0.5 * SR))
+        self.put(out, self.band(self.n(0.1), 160, 900) * self.env(int(0.1 * SR), 0.004, 0.03) * 1.2, 0)
+        self.put(out, self.grains(0.22, 260, 1500, 6000, 0.003, lambda u: (1 - u)), 0.01)
+        return out
+
+    def pebble_clatter(self, p):
+        """Pebbles bouncing down a cliff: ticks that get farther apart and quieter, then a faint lava plop."""
+        n = p.get('n', 9)
+        out = np.zeros(int(2.4 * SR))
+        at = 0.0
+        for i in range(n):
+            self.put(out, self.reson(self.band(self.n(0.04), 0, 6000) * self.env(int(0.04 * SR), 0.0004, 0.006),
+                                     [(self.r.uniform(900, 1700), 1.0), (self.r.uniform(2500, 3800), 0.5)], q=14) * (0.9 ** i), at)
+            at += 0.06 + 0.07 * i * self.r.uniform(0.7, 1.3)
+        self.put(out, self.lava_plop({}) * 0.35, at + 0.1)
+        return self.reverb(out, 1.4, 0.35, 6000)
+
+    def lava_plop(self, p):
+        out = np.zeros(int(0.9 * SR))
+        t = self.t(0.5)
+        f = 300 + 500 * np.exp(-t / 0.05)
+        y = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.09)
+        self.put(out, y * 0.7, 0)
+        self.put(out, self.grains(0.25, 200, 800, 3000, 0.004, lambda u: 1 - u), 0.01)
+        return out
+
+    def glass_creak(self, p):
+        """Amber glass flexing underfoot: thin glassy squeal with a wobble."""
+        d = self.r.uniform(0.7, 1.0)
+        t = self.t(d)
+        f = self.r.uniform(1500, 2100) * (1 + 0.04 * np.sin(2 * np.pi * self.r.uniform(6, 9) * t)) * (1 - 0.1 * t / d)
+        y = np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.5 + 0.25 * np.sin(2 * np.pi * np.cumsum(f * 1.5) / SR)
+        y += self.band(self.n(d), 2500, 8000) * 0.08 * (0.5 + 0.5 * np.sin(2 * np.pi * 31 * t))
+        y *= np.sin(np.pi * t / d) ** 1.2
+        return self.reverb(y * 0.5, 0.8, 0.25, 7000)
+
+    def glass_crack(self, p):
+        out = np.zeros(int(1.8 * SR))
+        self.put(out, self.band(self.n(0.015), 2000, 11000) * self.env(int(0.015 * SR), 0.0002, 0.003) * 2.4, 0)
+        for i in range(6):
+            self.put(out, self.chirp(self.r.uniform(4200, 6500), self.r.uniform(900, 1500), 0.5, 0.2) * 0.45, 0.01 + i * 0.09)
+        self.put(out, self.grains(0.7, 300, 2500, 9000, 0.003, lambda u: (1 - u) ** 1.6), 0.02)
+        self.put(out, self.partials(1200, [1, 1.7, 2.9], 1.2, [0.5, 0.3, 0.2]) * 0.2, 0.05)
+        return self.reverb(out, 1.4, 0.35, 8000)
+
+    def wax_squelch(self, p):
+        d = p.get('d', 0.8)
+        t = self.t(d)
+        y = self.reson(self.band(self.n(d), 200, 3000), [(380, 1.0), (760, 0.5)], q=5)
+        y *= 0.6 + 0.4 * np.sin(2 * np.pi * np.cumsum(260 + 420 * (t / d)) / SR / 8)
+        y += self.grains(d, 120, 600, 2500, 0.005)[:len(t)] * 0.35
+        return y * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 0.8
+
+    def bed_ashwind(self, p):
+        d = p.get('d', 8.0)
+        out = self._air(d, 400, 2600) * 0.3
+        out += self.grains(d, 30, 2500, 9000, 0.002)[:len(out)] * 0.07
+        return out
+
+    def bed_lavacliff(self, p):
+        d = p.get('d', 8.0)
+        out = self._air(d, 300, 2200) * 0.25
+        for i in range(int(d * 1.2)):
+            self.put(out, self.lava_plop({}) * self.r.uniform(0.04, 0.12), self.r.uniform(0, d - 1.0))
+        out += self.grains(d, 26, 1200, 6000, 0.004)[:len(out)] * 0.10
+        return out
+
+    def bed_craterrim(self, p):
+        d = p.get('d', 8.0)
+        t = self.t(d)
+        out = self._air(d, 250, 1800) * 0.3
+        for i in range(int(d * 1.0)):
+            self.put(out, self.lava_plop({}) * self.r.uniform(0.05, 0.15), self.r.uniform(0, d - 1.0))
+        out += self.grains(d, 40, 1500, 7000, 0.005)[:len(out)] * 0.12
+        out += 0.05 * np.sin(2 * np.pi * 196 * t) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.3 * t))
+        return self.reverb(out, 1.2, 0.3, 4500)[:len(out)]
 
 
 def write_wav(path, x):
