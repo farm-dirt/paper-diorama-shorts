@@ -29,14 +29,14 @@ def main():
             final = os.path.join(P, 'final', f'{slug}.mp4')
             subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'render.py'), P], check=True)
             # web copy: same 1080x1920 picture, lighter file (the Artifact publisher caps files at 20 MB)
-            # long-form: keep the web copy under ~30 MB (publisher limit) by lowering bitrate and size to 720p
+            # long-form: keep the web copy under ~18 MB (the publisher refuses files over 20 MiB): lower bitrate, 540p
             pj = json.load(open(os.path.join(P, 'project-files', 'project.json')))
             dur_ = json.load(open(os.path.join(P, 'project-files', 'timing.json')))['dur']
-            rate = max(250, min(2600, int(30 * 8 * 1024 / dur_) - 100))
-            scale = ['-vf', 'scale=-2:720' if pj.get('frame', [1080, 1920])[0] > pj.get('frame', [1080, 1920])[1] else 'scale=720:-2'] if rate < 2600 else []
-            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', final, *scale, '-c:v', 'libx264', '-preset', 'medium', '-crf', '25',
+            rate = max(150, min(2600, int(18 * 8 * 1024 / dur_) - 50))
+            scale = ['-vf', 'scale=-2:540' if pj.get('frame', [1080, 1920])[0] > pj.get('frame', [1080, 1920])[1] else 'scale=540:-2'] if rate < 2600 else []
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', final, *scale, '-c:v', 'libx264', '-preset', 'slow', *(['-b:v', f'{rate}k'] if rate < 2600 else ['-crf', '25']),
                             '-maxrate', f'{rate}k', '-bufsize', f'{2 * rate}k', '-pix_fmt', 'yuv420p', '-c:a', 'aac',
-                            '-b:a', '128k' if rate >= 2600 else '64k', '-movflags', '+faststart', os.path.join(out, 'preview.mp4')], check=True)
+                            '-b:a', '128k' if rate >= 2600 else '48k', '-movflags', '+faststart', os.path.join(out, 'preview.mp4')], check=True)
     import paperkit
     paperkit.set_res(0.25)
     from director import Director
