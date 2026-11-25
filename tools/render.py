@@ -26,7 +26,7 @@ def work(args):
     paperkit.set_res(k)
     from director import Director
     D = Director(pdir)
-    w, h = int(math.ceil(1080 * k)), int(math.ceil(1920 * k))
+    w, h = int(math.ceil(D.FW * k)), int(math.ceil(D.FH * k))
     # final: -tune animation + a keyframe every 10 s halves the file (paper grain is costly) at equal/better
     # SSIM and PSNR vs the old '-g fps' setting, same encode time (tested 14 Nov 2026)
     enc = (['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '28', '-pix_fmt', 'yuv420p', '-g', str(fps)] if preview else
@@ -67,7 +67,8 @@ def main():
     chunks = [(pdir, k, fps, f0 + i * n // nw, f0 + (i + 1) * n // nw, os.path.join(tmp, f'seg{i}.mp4'), preview)
               for i in range(nw) if (i + 1) * n // nw > i * n // nw]
     t0 = time.time()
-    print(f'rendering {n} frames ({t_from:.2f}-{t_to:.2f} s) at {int(1080 * k)}x{int(1920 * k)} with {len(chunks)} workers')
+    FW, FH = proj.get('frame', [1080, 1920])
+    print(f'rendering {n} frames ({t_from:.2f}-{t_to:.2f} s) at {int(FW * k)}x{int(FH * k)} with {len(chunks)} workers')
     if len(chunks) == 1:
         segs = [work(chunks[0])]
     else:

@@ -37,19 +37,20 @@ def main():
             d = ImageDraw.Draw(img)
             size = 150
             f = ImageFont.truetype(os.path.join(ROOT, 'assets', 'Fraunces-Black.woff'), size)
-            while f.getlength(title.upper()) > 1000 and size > 90:
+            FW = D.FW
+            while f.getlength(title.upper()) > FW - 80 and size > 90:
                 size -= 6
                 f = ImageFont.truetype(os.path.join(ROOT, 'assets', 'Fraunces-Black.woff'), size)
             words, lines, cur = title.upper().split(), [], ''
             for w in words:
-                if f.getlength((cur + ' ' + w).strip()) > 980:
+                if f.getlength((cur + ' ' + w).strip()) > FW - 100:
                     lines.append(cur); cur = w
                 else:
                     cur = (cur + ' ' + w).strip()
             lines.append(cur)
-            y = 230
+            y = 230 if D.FH > D.FW else 60
             for ln in lines:
-                x = (1080 - f.getlength(ln)) / 2
+                x = (FW - f.getlength(ln)) / 2
                 for w in ln.split():
                     col = (255, 205, 80) if w.strip('.,!?…') == hl else (250, 244, 232)
                     d.text((x, y), w, font=f, fill=col, stroke_width=10, stroke_fill=(30, 20, 22))

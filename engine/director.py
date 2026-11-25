@@ -87,6 +87,9 @@ class Director:
         tp = os.path.join(pf, 'timing.json')
         self.tim = json.load(open(tp)) if os.path.exists(tp) else {'dur': self.proj['scenes'][-1]['end'], 'env': [], 'envFps': 30, 'speech': []}
         self.fps = self.proj.get('fps', 24)
+        # frame size: vertical Shorts 1080x1920 (default) or landscape long-form "frame": [1920, 1080]
+        self.FW, self.FH = self.proj.get('frame', [1080, 1920])
+        paperkit.FRAME = (self.FW, self.FH)
         self.dur = self.tim['dur']
         self.rigs = {k: f() for k, f in CAST.items()}
         self.custom = None
@@ -253,7 +256,7 @@ class Director:
 
     def render_scene(self, si, sc, t, fi=0):
         set_ = SETS.get_set(sc['set'], sc.get('variant'))
-        S = Scene(1080, 1920)
+        S = Scene(self.FW, self.FH)
         for it in set_['items']:
             dx, dy = it['move'](t) if it['move'] else (0, 0)
             S.add(it['layer'], it['z'], it['lift'], it['x'], it['y'], dx, dy, key=it['key'])
@@ -311,7 +314,7 @@ class Director:
         # POV layer (the viewer's own hands, breath, things held): drawn in screen space, it only bobs
         # with the walk, so hands stay put while the world moves past (custom.pov(scene, S, t, ctx))
         if self.custom and hasattr(self.custom, 'pov'):
-            S2 = Scene(1080, 1920)
+            S2 = Scene(self.FW, self.FH)
             more = self.custom.pov(sc, S2, t, dict(set=set_, scene_index=si, bob=(bx_, by_), cam=(cx, cy, cz)))
             if S2.items:
                 rgb, a = S2.render_rgba(focus=2.0, dof=0.0, cam=(-bx_ * 0.5, -by_ * 0.8, 1.0))
@@ -329,7 +332,7 @@ class Director:
         # glows follow the camera roughly (they belong to near-focus objects)
         par = 1.0
         zz = 1 + (cz - 1) * par
-        glows = [(zz * gx + (1 - zz) * 540 - cx * par, zz * gy + (1 - zz) * 960 - cy * par, r * zz, c, a)
+        glows = [(zz * gx + (1 - zz) * self.FW / 2 - cx * par, zz * gy + (1 - zz) * self.FH / 2 - cy * par, r * zz, c, a)
                  for (gx, gy, r, c, a) in glows] + povg
         out = grade(img, glows=glows, light=sc.get('light', set_['light']), frame=fi,
                     flash=fl, flash_color=(f_ or {}).get('color', '#FFFFFF'),
@@ -421,12 +424,12 @@ class Director:
         if hook and hook.get('s', 0) <= t < hook.get('e', 2.0):
             u = (t - hook.get('s', 0)) / 0.18
             sc = 0.6 + 0.4 * ease(u, 'back') if u < 1 else 1.0
-            self.paste(out, self.caption_img(hook['text'], 96, 860), 540, hook.get('y', 330), sc, rot=-3)
+            self.paste(out, self.caption_img(hook['text'], 96, P.get('hookMaxW', 860)), self.FW / 2, hook.get('y', 330), sc, rot=-3)
         for c in P.get('captions', []):
             if c['s'] <= t < c['e']:
                 u = (t - c['s']) / 0.12
                 dy = 16 * (1 - ease(u, 'out')) if u < 1 else 0
-                self.paste(out, self.caption_img(c['text'], 66), 540, P.get('captionY', 420) + dy)
+                self.paste(out, self.caption_img(c['text'], P.get('captionSize', 66), P.get('captionMaxW', 900)), self.FW / 2, P.get('captionY', 420) + dy)
         for o in (P.get('overlays') or []) if not self.thumb else []:  # silent tags (none on thumbnails)
             if o['s'] <= t < o['e']:
                 u = (t - o['s']) / 0.16
@@ -457,7 +460,7 @@ class Director:
         tag = self._cap_cache[key]
         slide = 1 - ease(u / 0.3, 'back') if u < 0.3 else 0
         out_ = 1 - ease((cta['e'] - t) / 0.3, 'in') if cta['e'] - t < 0.3 else 0
-        x = 540 + 700 * slide + 700 * out_
+        x = cta.get('x', self.FW / 2) + 700 * slide + 700 * out_
         y = cta.get('y', 1440)
         pop = 1.0 + (0.12 * math.sin(min(1, (u - cta.get('tap', .95)) / 0.2) * math.pi) if done and u - cta.get('tap', .95) < 0.2 else 0)
         self.paste(out, tag, x, y, pop)

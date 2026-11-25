@@ -52,8 +52,8 @@ def blend(A, B, u, spec, t, k=1.0):
     h, w = B.shape[:2]
     Af = A.astype(np.float32) / 255
     Bf = B.astype(np.float32) / 255
-    at = spec.get('at', [540, 960])
-    px, py = at[0] * k, at[1] * k
+    at = spec.get('at')
+    px, py = (at[0] * k, at[1] * k) if at else (w / 2, h / 2)
     if kind == 'dive':
         e = _sm(u)
         A2 = _zoom(Af, 1 + 5.0 * e ** 1.6, px, py)

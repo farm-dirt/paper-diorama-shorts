@@ -32,6 +32,10 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
   ]
 }
 ```
+- **Landscape long-form (added 25 Nov 2026):** top-level `"frame": [1920, 1080]` renders 16:9 instead of the default
+  vertical 1080x1920 (Shorts). Sets for it must be built at 1920x1080 in custom.py; captions sit at the bottom
+  (`"captionY": 990, "captionSize": 50, "captionMaxW": 1400`, hook `"y": 120`, `"hookMaxW": 1400`). lint skips the Shorts
+  safe box and the subscribe CTA (long-form uses end screens) and checks faces against the set's own marks/floor.
 - `cam` = [pan_x, pan_y, zoom] in px; parallax is automatic (near layers move/zoom more).
   Keep zoom 0.95-1.4. Positive pan_x moves the view right; negative pan_y looks up.
 - `focus` default 2.0 (the actors). `rack` moves focus during the shot. `dof` (depth blur) default 0.3

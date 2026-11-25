@@ -23,7 +23,8 @@ def main():
     fdur = float(pr['format']['duration'])
     res = []
     def chk(name, ok, info): res.append((ok, name, info))
-    chk('resolution 1080x1920', vs['width'] == 1080 and vs['height'] == 1920, f"{vs['width']}x{vs['height']}")
+    FW, FH = proj.get('frame', [1080, 1920])
+    chk(f'resolution {FW}x{FH}', vs['width'] == FW and vs['height'] == FH, f"{vs['width']}x{vs['height']}")
     chk(f'frame rate {fps}', abs(vfps - fps) < 0.01, f'{vfps:.2f}')
     chk('frame count matches voice', abs(nb - round(dur * fps)) <= 1, f'{nb} vs {round(dur * fps)}')
     chk('duration matches voice (±0.1 s)', abs(fdur - dur) <= 0.1, f'{fdur:.2f} vs {dur:.2f}')

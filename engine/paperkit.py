@@ -18,6 +18,7 @@ import numpy as np
 import cv2
 
 K = 1.0                                   # render scale (1 = 1080x1920)
+FRAME = (1080, 1920)                      # logical frame (W, H); director sets it from project "frame"
 LIGHT = np.array([0.55, 0.835], np.float32)  # direction light travels (to lower-right)
 
 

@@ -34,6 +34,11 @@ def main():
             mod.register(CAST, {}, DR.POSES, SETS)  # same as director: the sets module
     rigs = {k: f() for k, f in CAST.items()}
     capY = proj.get('captionY', 420)
+    FW, FH = proj.get('frame', [1080, 1920])
+    land = FW > FH  # landscape long-form (16:9): no Shorts UI; keep faces off the edges, use each set's own marks/floor
+    global SAFE_L, SAFE_R, SAFE_T, CAUTION, SAFE_B
+    if land:
+        SAFE_L, SAFE_R, SAFE_T, CAUTION, SAFE_B = 80, FW - 80, 40, FH - 90, FH - 40
     for i, s in enumerate(sc, 1):
         L = s['end'] - s['start']
         if i > 1 and abs(s['start'] - sc[i - 2]['end']) > 0.01: probs.append(f'scene {i}: gap/overlap with scene {i-1}')
@@ -45,6 +50,9 @@ def main():
             probs.append(f'scene {i}: unknown variant {s["variant"]} for {s["set"]}')
         marks = {'L': 290, 'CL': 450, 'C': 560, 'CR': 680, 'R': 830}
         floor = {'harbor': 1660, 'room': 1700, 'forest': 1690, 'village': 1640}.get(s['set'], 1660)
+        if land:
+            st_ = SETS.get_set(s['set'], s.get('variant'))
+            marks, floor = st_['marks'], st_['floor']
         cam = s.get('cam', {})
         for c in [cam.get('from', [0, 0, 1]), cam.get('to', cam.get('from', [0, 0, 1]))]:
             zz = 1 + (c[2] - 1) * 1.0
@@ -55,22 +63,22 @@ def main():
                         probs.append(f'scene {i}: {a["who"]} has no pose "{p}" (have {sorted(DR.POSES.get(a["who"], DR.HUMAN))})')
                 xs = [a.get('mark', a.get('x', 'C'))] + ([a['walk']['to']] if a.get('walk') else [])
                 for xv in xs:
-                    x = marks.get(xv, 560) if isinstance(xv, str) else xv
-                    sx = zz * x + (1 - zz) * 540 - c[0]
+                    x = marks.get(xv, FW / 2) if isinstance(xv, str) else xv
+                    sx = zz * x + (1 - zz) * FW / 2 - c[0]
                     # Shorts safe box (SKILL.md): faces inside x 48-888 (the right 192 px are the like/share buttons)
                     if not SAFE_L + FACE_HW < sx < SAFE_R - FACE_HW * zz:
                         where = 'under the YouTube buttons' if sx >= SAFE_R - FACE_HW * zz else 'too close to the left edge'
                         probs.append(f'scene {i}: {a["who"]} face {where} (x={sx:.0f}, safe box x {SAFE_L}-{SAFE_R}) with camera {c}')
                 scale = a.get('scale', 0.8)
                 head = a.get('y', floor) - rigs[a['who']].height * scale * 0.95
-                sy = zz * head + (1 - zz) * 960 - c[1]
+                sy = zz * head + (1 - zz) * FH / 2 - c[1]
                 if sy < SAFE_T:
                     probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is under the YouTube search bar (y < {SAFE_T})')
                 elif sy > SAFE_B:
                     probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is in the bottom YouTube UI zone (y > {SAFE_B})')
                 elif sy > CAUTION and a['who'] != 'kupas':
                     probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) is in the caution strip (y {CAUTION}-{SAFE_B}): raise, zoom or tilt the camera')
-                if a['who'] != 'kupas' and sy < capY + 90 and proj.get('captions'):
+                if a['who'] != 'kupas' and capY < FH / 2 and sy < capY + 90 and proj.get('captions'):
                     probs.append(f'scene {i}: {a["who"]} head (y={sy:.0f}) runs into the caption band (y={capY}) - zoom less / lower captionY')
                 if L > 2.5 and not a.get('keys') and not a.get('walk') and not a.get('talk'):
                     probs.append(f'scene {i}: {a["who"]} holds one pose for {L:.1f} s - add a key (reaction)')
@@ -78,9 +86,9 @@ def main():
     cta = proj.get('cta')
     if not cta and proj.get('voice') is None:
         pass  # sound-only ASMR journey shorts have no subscribe button (user removed it, 24 Nov 2026)
-    elif not cta:
+    elif not cta and not land:  # long-form uses end screens, not the Shorts subscribe tap
         probs.append('no subscribe CTA: add "cta": {"s": S, "e": S + 2.6, "tap": 0.95} at 45-60 % of the video')
-    else:
+    elif cta:
         if cta['s'] < 3 or cta['e'] > dur - 3: probs.append('cta must not be in the first or last 3 s')
         if not (0.4 * dur <= cta['s'] <= 0.65 * dur): probs.append(f'cta start {cta["s"]} should be ~45-60 % of {dur:.1f} s')
     for cue in proj.get('sfx', []):
