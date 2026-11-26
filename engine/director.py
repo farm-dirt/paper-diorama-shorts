@@ -393,6 +393,72 @@ class Director:
         self._cap_cache[key] = arr
         return arr
 
+    def bubble_img(self, text, color, tail, size=54, maxw=620, name=None):
+        """Torn-paper speech bubble with a tail. tail = (dx, dy): where the tail tip points,
+        relative to the bubble centre, in frame px. color = speaker colour (hex). name = small tag."""
+        key = ('bubble', text, color, tuple(tail), size, name, paperkit.K)
+        if key in self._cap_cache:
+            return self._cap_cache[key]
+        from PIL import ImageFilter
+        k = paperkit.K
+        f = self.font(int(size * k))
+        words, lines, cur = text.split(), [], []
+        for w in words:
+            if cur and f.getlength(' '.join(cur + [w])) > maxw * k:
+                lines.append(' '.join(cur)); cur = [w]
+            else:
+                cur.append(w)
+        lines.append(' '.join(cur))
+        lh = int(size * 1.14 * k)
+        tw = max(f.getlength(s) for s in lines)
+        pad_x, pad_y = 30 * k, 20 * k
+        bw, bh = tw + 2 * pad_x, lh * len(lines) + 2 * pad_y
+        tx, ty = tail[0] * k, tail[1] * k
+        tlen = math.hypot(tx, ty) or 1
+        # canvas big enough for the card plus the tail tip
+        Wd = int(max(bw, 2 * abs(tx)) + 80 * k)
+        Hd = int(max(bh, 2 * abs(ty)) + 80 * k)
+        cx, cy = Wd / 2, Hd / 2
+        img = Image.new('RGBA', (Wd, Hd), (0, 0, 0, 0))
+        r = np.random.default_rng(abs(hash((text, color))) % 99991)
+        x0, y0, x1, y1 = cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2
+        edge = []
+        n = 18
+        for i in range(n): edge.append((x0 + (x1 - x0) * i / n, y0 + r.uniform(-3, 3) * k))
+        for i in range(n): edge.append((x1 + r.uniform(-3, 3) * k, y0 + (y1 - y0) * i / n))
+        for i in range(n): edge.append((x1 - (x1 - x0) * i / n, y1 + r.uniform(-3, 3) * k))
+        for i in range(n): edge.append((x0 + r.uniform(-3, 3) * k, y1 - (y1 - y0) * i / n))
+        # tail: a wedge from near the card centre toward the tip
+        ux, uy = tx / tlen, ty / tlen
+        px, py = -uy, ux
+        bx, by = cx + ux * min(bw, bh) * 0.25, cy + uy * min(bw, bh) * 0.25
+        wedge = [(bx + px * 26 * k, by + py * 26 * k), (cx + tx, cy + ty), (bx - px * 26 * k, by - py * 26 * k)]
+        col = tuple(int(color.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4))
+        paper = tuple(int(244 * 0.72 + c * 0.28) for c in col)  # cream paper tinted with the speaker colour
+        shadow = Image.new('RGBA', img.size, (0, 0, 0, 0))
+        sd = ImageDraw.Draw(shadow)
+        sd.polygon([(x + 7 * k, y + 9 * k) for x, y in edge], fill=(20, 12, 10, 120))
+        sd.polygon([(x + 7 * k, y + 9 * k) for x, y in wedge], fill=(20, 12, 10, 120))
+        img = Image.alpha_composite(img, shadow.filter(ImageFilter.GaussianBlur(6 * k)))
+        d = ImageDraw.Draw(img)
+        d.polygon(wedge, fill=col + (255,))
+        d.polygon(edge, fill=col + (255,))
+        inset = [(cx + (x - cx) * (1 - 10 * k / bw), cy + (y - cy) * (1 - 10 * k / bh)) for x, y in edge]
+        d.polygon(inset, fill=paper + (255,))
+        y = y0 + pad_y - 4 * k
+        for s in lines:
+            d.text((cx - f.getlength(s) / 2, y), s, font=f, fill=(36, 26, 26))
+            y += lh
+        if name:
+            fn = self.font(int(size * 0.5 * k))
+            nw = fn.getlength(name) + 20 * k
+            d.rounded_rectangle([x0 + 14 * k, y0 - 22 * k, x0 + 14 * k + nw, y0 + 6 * k], 6 * k, fill=col + (255,))
+            lum = 0.299 * col[0] + 0.587 * col[1] + 0.114 * col[2]
+            d.text((x0 + 24 * k, y0 - 20 * k), name, font=fn, fill=(36, 26, 26) if lum > 160 else (250, 244, 232))
+        arr = np.asarray(img).astype(np.float32) / 255
+        self._cap_cache[key] = arr
+        return arr
+
     def paste(self, out, rgba, cx, cy, scale=1.0, rot=0.0):
         if scale != 1.0:
             import cv2
@@ -430,6 +496,15 @@ class Director:
                 u = (t - c['s']) / 0.12
                 dy = 16 * (1 - ease(u, 'out')) if u < 1 else 0
                 self.paste(out, self.caption_img(c['text'], P.get('captionSize', 66), P.get('captionMaxW', 900)), self.FW / 2, P.get('captionY', 420) + dy)
+        # speech bubbles: {"s","e","text","x","y","color","tail":[dx,dy],"name"?} - one at a time, never on thumbnails
+        for b in (P.get('bubbles') or []) if not self.thumb else []:
+            if b['s'] <= t < b['e']:
+                u = (t - b['s']) / 0.18
+                sc_ = 0.5 + 0.5 * ease(u, 'back') if u < 1 else 1.0
+                if b['e'] - t < 0.15:
+                    sc_ *= max(0.3, (b['e'] - t) / 0.15)
+                self.paste(out, self.bubble_img(b['text'], b.get('color', '#C8553D'), b.get('tail', [0, 120]),
+                                                b.get('size', 54), b.get('maxw', 620), b.get('name')), b['x'], b['y'], sc_)
         for o in (P.get('overlays') or []) if not self.thumb else []:  # silent tags (none on thumbnails)
             if o['s'] <= t < o['e']:
                 u = (t - o['s']) / 0.16

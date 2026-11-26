@@ -32,6 +32,9 @@ The voice-over is the master clock. All times are **absolute seconds** in the vi
   ]
 }
 ```
+- **Speech bubbles (added 26 Nov 2026):** top-level `"bubbles": [{"s", "e", "text", "x", "y", "color", "tail": [dx, dy], "name"?}]`
+  draws a torn-paper bubble centred at x,y with a tail pointing dx,dy (frame px) at the speaker, tinted with the
+  speaker's colour, with an optional name tag. One at a time, at most 12 words / 2 lines, shown >= 1.5 s; never on thumbnails.
 - **Landscape long-form (added 25 Nov 2026):** top-level `"frame": [1920, 1080]` renders 16:9 instead of the default
   vertical 1080x1920 (Shorts). Sets for it must be built at 1920x1080 in custom.py; captions sit at the bottom
   (`"captionY": 990, "captionSize": 50, "captionMaxW": 1400`, hook `"y": 120`, `"hookMaxW": 1400`). lint skips the Shorts
