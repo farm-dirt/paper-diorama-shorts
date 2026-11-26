@@ -236,6 +236,10 @@ def main():
     if not proj.get('voice'):
         return main_sound_only(P, proj, tim)
     mixcfg = {'music': 0.08, 'musicPause': 0.14, 'sfx': 0.35}; mixcfg.update(proj.get('mix', {}))
+    # long-form overrides: music stops may go deeper and last longer (story pauses of 2-5 s), and the end
+    # fades over several seconds to near silence. Shorts keep the defaults (0.12 floor, 0.4 s, 0.4 s fade).
+    global STOP_FLOOR, STOP_MAX
+    STOP_FLOOR = mixcfg.get('stopFloor', STOP_FLOOR); STOP_MAX = mixcfg.get('stopMax', STOP_MAX)
     vpath = os.path.join(P, 'voice-over', proj['voice'])
     # voice compression (default on, mix.voiceComp false to skip): evens out quiet syllables so the
     # narrator stays clear on phone speakers and over food/ASMR sounds (user note, 23 Nov 2026)
@@ -278,7 +282,7 @@ def main():
         for a, b in tim['pauses']:
             if b - a >= 0.6: g[int(a * SR):int(b * SR)] = mixcfg['musicPause']
         k = int(0.15 * SR); g = np.convolve(g, np.ones(k) / k, mode='same')
-        fade = int(0.4 * SR); m[-fade:] *= np.linspace(1, 0, fade)
+        fade = int(mixcfg.get('endFade', 0.4) * SR); m[-fade:] *= np.linspace(1, 0, fade) ** 2
         bed += m * g
     fx = np.zeros(len(voice))
     bad = [c['name'] for c in proj.get('sfx', []) if c['name'] in BANNED]
@@ -297,6 +301,8 @@ def main():
     fx *= duck
     # room tone ~ -34 dB under the voice: inaudible under speech, but pauses never go to dead air
     mix = voice + bed + fx + room_tone(len(voice), vr * mixcfg.get('roomTone', 0.02))
+    if mixcfg.get('endSilence'):  # long-form ending: everything fades to near silence (< -50 dB) by the last frame
+        n_ = int(mixcfg['endSilence'] * SR); mix[-n_:] *= np.linspace(1, 0, n_) ** 3
     os.makedirs(os.path.join(P, 'audio'), exist_ok=True)
     tmp = os.path.join(P, 'audio', 'mix_raw.wav')
     pcm = np.clip(mix / max(1.0, np.abs(mix).max()), -1, 1)
