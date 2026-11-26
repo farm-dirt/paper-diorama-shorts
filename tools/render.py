@@ -61,7 +61,8 @@ def main():
     out = opt('--out', None, str) or (os.path.join(pdir, 'preview', 'preview.mp4') if preview
                                       else os.path.join(pdir, 'final', f"{proj['slug']}.mp4"))
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    tmp = os.path.join(pdir, 'project-files', '_segs')
+    # one temp folder per output file, so two renders of the same project never share segment files
+    tmp = os.path.join(pdir, 'project-files', '_segs_' + os.path.splitext(os.path.basename(out))[0])
     os.makedirs(tmp, exist_ok=True)
     n = f1 - f0
     chunks = [(pdir, k, fps, f0 + i * n // nw, f0 + (i + 1) * n // nw, os.path.join(tmp, f'seg{i}.mp4'), preview)
